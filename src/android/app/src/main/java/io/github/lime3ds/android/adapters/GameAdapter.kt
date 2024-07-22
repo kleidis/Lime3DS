@@ -26,13 +26,13 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.github.lime3ds.android.HomeNavigationDirections
 import io.github.lime3ds.android.LimeApplication
 import io.github.lime3ds.android.R
-import io.github.lime3ds.android.adapters.GameAdapter.GameViewHolder
 import io.github.lime3ds.android.databinding.CardGameBinding
 import io.github.lime3ds.android.databinding.CardGameLargeBinding
 import io.github.lime3ds.android.features.cheats.ui.CheatsFragmentDirections
 import io.github.lime3ds.android.model.Game
 import io.github.lime3ds.android.utils.GameIconUtils
 import io.github.lime3ds.android.viewmodel.GamesViewModel
+
 
 class GameAdapter(private val activity: AppCompatActivity) :
     ListAdapter<Game, GameViewHolder>(AsyncDifferConfig.Builder(DiffCallback()).build()),
@@ -45,19 +45,16 @@ class GameAdapter(private val activity: AppCompatActivity) :
         notifyDataSetChanged()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GameViewHolder {
-        // Create a new view.
-        val layoutInflater = LayoutInflater.from(parent.context)
-        val binding = if (useLargeLayout) {
-            CardGameLargeBinding.inflate(layoutInflater, parent, false)
-        } else {
-            CardGameBinding.inflate(layoutInflater, parent, false)
-        }
-        binding.root.setOnClickListener(this)
-        binding.root.setOnLongClickListener(this)
 
-        // Use that view to create a ViewHolder.
-        return GameViewHolder(binding)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GameViewHolder {
+        val layoutInflater = LayoutInflater.from(parent.context)
+        return if (useLargeLayout) {
+            val binding = CardGameLargeBinding.inflate(layoutInflater, parent, false)
+            GameViewHolder.LargeGameViewHolder(binding)
+        } else {
+            val binding = CardGameBinding.inflate(layoutInflater, parent, false)
+            GameViewHolder.SmallGameViewHolder(binding)
+        }
     }
 
     override fun onBindViewHolder(holder: GameViewHolder, position: Int) {
@@ -141,65 +138,122 @@ class GameAdapter(private val activity: AppCompatActivity) :
         }
     }
 
-    inner class GameViewHolder(val binding: CardGameBinding) :
-        RecyclerView.ViewHolder(binding.root) {
-        lateinit var game: Game
+    sealed class GameViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        abstract fun bind(game: Game)
 
-        init {
-            binding.cardGame.tag = this
-        }
+        class SmallGameViewHolder(val binding: CardGameBinding) : GameViewHolder(binding.root) {
+            lateinit var game: Game
 
-        fun bind(game: Game) {
-            this.game = game
-
-            binding.imageGameScreen.scaleType = ImageView.ScaleType.CENTER_CROP
-            GameIconUtils.loadGameIcon(activity, game, binding.imageGameScreen)
-
-            binding.textGameTitle.visibility = if (game.title.isEmpty()) {
-                View.GONE
-            } else {
-                View.VISIBLE
-            }
-            binding.textCompany.visibility = if (game.company.isEmpty()) {
-                View.GONE
-            } else {
-                View.VISIBLE
+            init {
+                binding.cardGame.tag = this
             }
 
-            binding.textGameTitle.text = game.title
-            binding.textCompany.text = game.company
-            binding.textFilename.visibility = if (useLargeLayout) View.GONE else View.VISIBLE
-            if (!useLargeLayout) {
+            override fun bind(game: Game) {
+                this.game = game
+
+                binding.imageGameScreen.scaleType = ImageView.ScaleType.CENTER_CROP
+                GameIconUtils.loadGameIcon(activity, game, binding.imageGameScreen)
+
+                binding.textGameTitle.visibility = if (game.title.isEmpty()) {
+                    View.GONE
+                } else {
+                    View.VISIBLE
+                }
+                binding.textCompany.visibility = if (game.company.isEmpty()) {
+                    View.GONE
+                } else {
+                    View.VISIBLE
+                }
+
+                binding.textGameTitle.text = game.title
+                binding.textCompany.text = game.company
+                binding.textFilename.visibility = View.VISIBLE
                 binding.textFilename.text = game.filename
                 binding.textFilename.ellipsize = TextUtils.TruncateAt.MARQUEE
                 binding.textFilename.isSelected = true
+
+                val backgroundColorId =
+                    if (
+                        isValidGame(game.filename.substring(game.filename.lastIndexOf(".") + 1).lowercase())
+                    ) {
+                        R.attr.colorSurface
+                    } else {
+                        R.attr.colorErrorContainer
+                    }
+                binding.cardContents.setBackgroundColor(
+                    MaterialColors.getColor(
+                        binding.cardContents,
+                        backgroundColorId
+                    )
+                )
+
+                binding.textGameTitle.postDelayed(
+                    {
+                        binding.textGameTitle.ellipsize = TextUtils.TruncateAt.MARQUEE
+                        binding.textGameTitle.isSelected = true
+
+                        binding.textCompany.ellipsize = TextUtils.TruncateAt.MARQUEE
+                        binding.textCompany.isSelected = true
+                    },
+                    3000
+                )
+            }
+        }
+
+        class LargeGameViewHolder(val binding: CardGameLargeBinding) : GameViewHolder(binding.root) {
+            lateinit var game: Game
+
+            init {
+                binding.cardGame.tag = this
             }
 
-            val backgroundColorId =
-                if (
-                    isValidGame(game.filename.substring(game.filename.lastIndexOf(".") + 1).lowercase())
-                ) {
-                    R.attr.colorSurface
+            override fun bind(game: Game) {
+                this.game = game
+
+                binding.imageGameScreen.scaleType = ImageView.ScaleType.CENTER_CROP
+                GameIconUtils.loadGameIcon(activity, game, binding.imageGameScreen)
+
+                binding.textGameTitle.visibility = if (game.title.isEmpty()) {
+                    View.GONE
                 } else {
-                    R.attr.colorErrorContainer
+                    View.VISIBLE
                 }
-            binding.cardContents.setBackgroundColor(
-                MaterialColors.getColor(
-                    binding.cardContents,
-                    backgroundColorId
+                binding.textCompany.visibility = if (game.company.isEmpty()) {
+                    View.GONE
+                } else {
+                    View.VISIBLE
+                }
+
+                binding.textGameTitle.text = game.title
+                binding.textCompany.text = game.company
+                binding.textFilename.visibility = View.GONE
+
+                val backgroundColorId =
+                    if (
+                        isValidGame(game.filename.substring(game.filename.lastIndexOf(".") + 1).lowercase())
+                    ) {
+                        R.attr.colorSurface
+                    } else {
+                        R.attr.colorErrorContainer
+                    }
+                binding.cardContents.setBackgroundColor(
+                    MaterialColors.getColor(
+                        binding.cardContents,
+                        backgroundColorId
+                    )
                 )
-            )
 
-            binding.textGameTitle.postDelayed(
-                {
-                    binding.textGameTitle.ellipsize = TextUtils.TruncateAt.MARQUEE
-                    binding.textGameTitle.isSelected = true
+                binding.textGameTitle.postDelayed(
+                    {
+                        binding.textGameTitle.ellipsize = TextUtils.TruncateAt.MARQUEE
+                        binding.textGameTitle.isSelected = true
 
-                    binding.textCompany.ellipsize = TextUtils.TruncateAt.MARQUEE
-                    binding.textCompany.isSelected = true
-                },
-                3000
-            )
+                        binding.textCompany.ellipsize = TextUtils.TruncateAt.MARQUEE
+                        binding.textCompany.isSelected = true
+                    },
+                    3000
+                )
+            }
         }
     }
 
