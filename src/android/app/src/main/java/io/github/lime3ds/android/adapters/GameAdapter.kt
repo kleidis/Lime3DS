@@ -28,6 +28,7 @@ import io.github.lime3ds.android.LimeApplication
 import io.github.lime3ds.android.R
 import io.github.lime3ds.android.adapters.GameAdapter.GameViewHolder
 import io.github.lime3ds.android.databinding.CardGameBinding
+import io.github.lime3ds.android.databinding.CardGameLargeBinding
 import io.github.lime3ds.android.features.cheats.ui.CheatsFragmentDirections
 import io.github.lime3ds.android.model.Game
 import io.github.lime3ds.android.utils.GameIconUtils
@@ -39,19 +40,21 @@ class GameAdapter(private val activity: AppCompatActivity) :
     private var lastClickTime = 0L
     private var useLargeLayout = false
 
-    fun toggleView(useLargeLayout: Boolean) {
-        this.useLargeLayout = useLargeLayout
+    fun toggleView(useLarge: Boolean) {
+        useLargeLayout = useLarge
         notifyDataSetChanged()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GameViewHolder {
         // Create a new view.
-        val layoutId = if (useLargeLayout) R.layout.card_game_large else R.layout.card_game
-        val binding = DataBindingUtil.inflate<CardGameBinding>(
-            LayoutInflater.from(parent.context), layoutId, parent, false
-        )
-        binding.cardGame.setOnClickListener(this)
-        binding.cardGame.setOnLongClickListener(this)
+        val layoutInflater = LayoutInflater.from(parent.context)
+        val binding = if (useLargeLayout) {
+            CardGameLargeBinding.inflate(layoutInflater, parent, false)
+        } else {
+            CardGameBinding.inflate(layoutInflater, parent, false)
+        }
+        binding.root.setOnClickListener(this)
+        binding.root.setOnLongClickListener(this)
 
         // Use that view to create a ViewHolder.
         return GameViewHolder(binding)
@@ -165,15 +168,11 @@ class GameAdapter(private val activity: AppCompatActivity) :
 
             binding.textGameTitle.text = game.title
             binding.textCompany.text = game.company
-
+            binding.textFilename.visibility = if (useLargeLayout) View.GONE else View.VISIBLE
             if (!useLargeLayout) {
                 binding.textFilename.text = game.filename
-                binding.textFilename.postDelayed({
-                    binding.textFilename.ellipsize = TextUtils.TruncateAt.MARQUEE
-                    binding.textFilename.isSelected = true
-                }, 3000)
-            } else {
-                binding.textFilename.visibility = View.GONE
+                binding.textFilename.ellipsize = TextUtils.TruncateAt.MARQUEE
+                binding.textFilename.isSelected = true
             }
 
             val backgroundColorId =
