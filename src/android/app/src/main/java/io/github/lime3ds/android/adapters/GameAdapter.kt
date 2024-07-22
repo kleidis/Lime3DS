@@ -37,19 +37,28 @@ class GameAdapter(private val activity: AppCompatActivity) :
     ListAdapter<Game, GameViewHolder>(AsyncDifferConfig.Builder(DiffCallback()).build()),
     View.OnClickListener, View.OnLongClickListener {
     private var lastClickTime = 0L
+    private var useLargeLayout = false
+
+    fun toggleView(useLargeLayout: Boolean) {
+        this.useLargeLayout = useLargeLayout
+        notifyDataSetChanged()
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GameViewHolder {
-        // Create a new view.
-        val binding = CardGameBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val layoutId = if (useLargeLayout) R.layout.card_game_large else R.layout.card_game
+        val binding = DataBindingUtil.inflate<CardGameBinding>(
+            LayoutInflater.from(parent.context), layoutId, parent, false
+        )
         binding.cardGame.setOnClickListener(this)
         binding.cardGame.setOnLongClickListener(this)
-
-        // Use that view to create a ViewHolder.
+        if (!useLargeLayout) {
+            binding.textFilename.visibility = View.GONE  // Hide filename in small layout
+        }
         return GameViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: GameViewHolder, position: Int) {
-        holder.bind(currentList[position])
+        holder.bind(currentList[position], useLargeLayout)
     }
 
     override fun getItemCount(): Int = currentList.size
@@ -137,7 +146,7 @@ class GameAdapter(private val activity: AppCompatActivity) :
             binding.cardGame.tag = this
         }
 
-        fun bind(game: Game) {
+        fun bind(game: Game, useLargeLayout: Boolean) {
             this.game = game
 
             binding.imageGameScreen.scaleType = ImageView.ScaleType.CENTER_CROP
@@ -156,7 +165,14 @@ class GameAdapter(private val activity: AppCompatActivity) :
 
             binding.textGameTitle.text = game.title
             binding.textCompany.text = game.company
-            binding.textFilename.text = game.filename
+            if (useLargeLayout) {
+                binding.textFilename.visibility = View.VISIBLE
+                binding.textFilename.text = game.filename
+                binding.textFilename.ellipsize = TextUtils.TruncateAt.MARQUEE
+                binding.textFilename.isSelected = true
+            } else {
+                binding.textFilename.visibility = View.GONE
+            }
 
             val backgroundColorId =
                 if (
@@ -180,9 +196,6 @@ class GameAdapter(private val activity: AppCompatActivity) :
 
                     binding.textCompany.ellipsize = TextUtils.TruncateAt.MARQUEE
                     binding.textCompany.isSelected = true
-
-                    binding.textFilename.ellipsize = TextUtils.TruncateAt.MARQUEE
-                    binding.textFilename.isSelected = true
                 },
                 3000
             )

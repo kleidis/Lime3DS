@@ -139,6 +139,11 @@ class GamesFragment : Fragment() {
         }
 
         setInsets()
+
+        val toggleButton = view.findViewById<Button>(R.id.toggleViewButton)
+        toggleButton.setOnClickListener {
+            toggleView()
+        }
     }
 
     override fun onDestroyView() {
@@ -199,4 +204,11 @@ class GamesFragment : Fragment() {
 
             windowInsets
         }
+
+    private fun toggleView() {
+        val useLargeLayout = (binding.gridGames.layoutManager as GridLayoutManager).spanCount == 1
+        val newSpanCount = if (useLargeLayout) 2 else 1
+        binding.gridGames.layoutManager = GridLayoutManager(context, newSpanCount)
+        (binding.gridGames.adapter as GameAdapter).toggleView(useLargeLayout)
+    }
 }
