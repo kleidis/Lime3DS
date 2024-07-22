@@ -51,10 +51,10 @@ class GameAdapter(private val activity: AppCompatActivity) :
         val layoutInflater = LayoutInflater.from(parent.context)
         return if (useLargeLayout) {
             val binding = CardGameLargeBinding.inflate(layoutInflater, parent, false)
-            GameViewHolder.LargeGameViewHolder(binding)
+            GameViewHolder.LargeGameViewHolder(binding, activity)
         } else {
             val binding = CardGameBinding.inflate(layoutInflater, parent, false)
-            GameViewHolder.SmallGameViewHolder(binding)
+            GameViewHolder.SmallGameViewHolder(binding, activity)
         }
     }
 
@@ -258,9 +258,11 @@ class GameAdapter(private val activity: AppCompatActivity) :
         }
     }
 
-    private fun isValidGame(extension: String): Boolean {
-        return Game.badExtensions.stream()
-            .noneMatch { extension == it.lowercase() }
+    companion object {
+        fun isValidGame(extension: String): Boolean {
+            return Game.badExtensions.stream()
+                .noneMatch { extension == it.lowercase() }
+        }
     }
 
     private class DiffCallback : DiffUtil.ItemCallback<Game>() {
