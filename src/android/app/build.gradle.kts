@@ -159,6 +159,10 @@ android {
             jniLibs.srcDir(downloadedJniLibsPath)
         }
     }
+
+    dataBinding {
+        enabled = true
+    }
 }
 
 dependencies {
@@ -180,6 +184,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     implementation("androidx.preference:preference-ktx:1.2.1")
     implementation("io.coil-kt:coil:2.6.0")
+    implementation("androidx.databinding:databinding-runtime:4.1.2")
 }
 
 // Download Vulkan Validation Layers from the KhronosGroup GitHub.
