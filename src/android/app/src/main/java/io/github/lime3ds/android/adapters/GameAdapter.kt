@@ -26,6 +26,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.github.lime3ds.android.HomeNavigationDirections
 import io.github.lime3ds.android.LimeApplication
 import io.github.lime3ds.android.R
+import io.github.lime3ds.android.adapters.GameAdapter.GameViewHolder
 import io.github.lime3ds.android.databinding.CardGameBinding
 import io.github.lime3ds.android.databinding.CardGameLargeBinding
 import io.github.lime3ds.android.features.cheats.ui.CheatsFragmentDirections
