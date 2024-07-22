@@ -27,6 +27,7 @@ import io.github.lime3ds.android.HomeNavigationDirections
 import io.github.lime3ds.android.LimeApplication
 import io.github.lime3ds.android.R
 import io.github.lime3ds.android.adapters.GameAdapter.GameViewHolder
+import io.github.lime3ds.android.databinding.CardGameBinding
 import io.github.lime3ds.android.features.cheats.ui.CheatsFragmentDirections
 import io.github.lime3ds.android.model.Game
 import io.github.lime3ds.android.utils.GameIconUtils
@@ -44,13 +45,20 @@ class GameAdapter(private val activity: AppCompatActivity) :
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GameViewHolder {
+        // Create a new view.
         val layoutId = if (useLargeLayout) R.layout.card_game_large else R.layout.card_game
-        val view = LayoutInflater.from(parent.context).inflate(layoutId, parent, false)
-        return GameViewHolder(view)
+        val binding = DataBindingUtil.inflate<CardGameBinding>(
+            LayoutInflater.from(parent.context), layoutId, parent, false
+        )
+        binding.cardGame.setOnClickListener(this)
+        binding.cardGame.setOnLongClickListener(this)
+
+        // Use that view to create a ViewHolder.
+        return GameViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: GameViewHolder, position: Int) {
-        holder.bind(currentList[position], useLargeLayout)
+        holder.bind(currentList[position])
     }
 
     override fun getItemCount(): Int = currentList.size
@@ -130,32 +138,69 @@ class GameAdapter(private val activity: AppCompatActivity) :
         }
     }
 
-    inner class GameViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        var game: Game? = null
-        private val imageGameScreen: ImageView = view.findViewById(R.id.image_game_screen)
-        private val textGameTitle: TextView = view.findViewById(R.id.text_game_title)
-        private val textCompany: TextView = view.findViewById(R.id.text_company)
-        private val textFilename: TextView = view.findViewById(R.id.text_filename)
+    inner class GameViewHolder(val binding: CardGameBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+        lateinit var game: Game
 
-        fun bind(game: Game, useLargeLayout: Boolean) {
+        init {
+            binding.cardGame.tag = this
+        }
+
+        fun bind(game: Game) {
             this.game = game
 
-            imageGameScreen.scaleType = ImageView.ScaleType.CENTER_CROP
-            GameIconUtils.loadGameIcon(activity, game, imageGameScreen)
+            binding.imageGameScreen.scaleType = ImageView.ScaleType.CENTER_CROP
+            GameIconUtils.loadGameIcon(activity, game, binding.imageGameScreen)
 
-            textGameTitle.visibility = if (game.title.isEmpty()) View.GONE else View.VISIBLE
-            textCompany.visibility = if (game.company.isEmpty()) View.GONE else View.VISIBLE
-            textGameTitle.text = game.title
-            textCompany.text = game.company
-
-            if (useLargeLayout) {
-                textFilename.visibility = View.VISIBLE
-                textFilename.text = game.filename
-                textFilename.ellipsize = TextUtils.TruncateAt.MARQUEE
-                textFilename.isSelected = true
+            binding.textGameTitle.visibility = if (game.title.isEmpty()) {
+                View.GONE
             } else {
-                textFilename.visibility = View.GONE
+                View.VISIBLE
             }
+            binding.textCompany.visibility = if (game.company.isEmpty()) {
+                View.GONE
+            } else {
+                View.VISIBLE
+            }
+
+            binding.textGameTitle.text = game.title
+            binding.textCompany.text = game.company
+
+            if (!useLargeLayout) {
+                binding.textFilename.text = game.filename
+                binding.textFilename.postDelayed({
+                    binding.textFilename.ellipsize = TextUtils.TruncateAt.MARQUEE
+                    binding.textFilename.isSelected = true
+                }, 3000)
+            } else {
+                binding.textFilename.visibility = View.GONE
+            }
+
+            val backgroundColorId =
+                if (
+                    isValidGame(game.filename.substring(game.filename.lastIndexOf(".") + 1).lowercase())
+                ) {
+                    R.attr.colorSurface
+                } else {
+                    R.attr.colorErrorContainer
+                }
+            binding.cardContents.setBackgroundColor(
+                MaterialColors.getColor(
+                    binding.cardContents,
+                    backgroundColorId
+                )
+            )
+
+            binding.textGameTitle.postDelayed(
+                {
+                    binding.textGameTitle.ellipsize = TextUtils.TruncateAt.MARQUEE
+                    binding.textGameTitle.isSelected = true
+
+                    binding.textCompany.ellipsize = TextUtils.TruncateAt.MARQUEE
+                    binding.textCompany.isSelected = true
+                },
+                3000
+            )
         }
     }
 
