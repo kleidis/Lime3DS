@@ -207,9 +207,10 @@ class GamesFragment : Fragment() {
         }
 
     private fun toggleView() {
-        val useLargeLayout = (binding.gridGames.layoutManager as GridLayoutManager).spanCount == 1
-        val newSpanCount = if (useLargeLayout) 2 else 1
+        val currentSpanCount = (binding.gridGames.layoutManager as GridLayoutManager).spanCount
+        val useLargeLayout = currentSpanCount == resources.getInteger(R.integer.game_grid_columns)
+        val newSpanCount = if (useLargeLayout) 1 else 2
         binding.gridGames.layoutManager = GridLayoutManager(context, newSpanCount)
-        (binding.gridGames.adapter as GameAdapter).toggleView(useLargeLayout)
+        (binding.gridGames.adapter as GameAdapter).toggleView(!useLargeLayout)
     }
 }
