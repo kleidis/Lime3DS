@@ -159,10 +159,6 @@ android {
             jniLibs.srcDir(downloadedJniLibsPath)
         }
     }
-
-    dataBinding {
-        enabled = true
-    }
 }
 
 dependencies {
