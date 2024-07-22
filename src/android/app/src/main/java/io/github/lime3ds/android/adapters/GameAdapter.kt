@@ -142,7 +142,7 @@ class GameAdapter(private val activity: AppCompatActivity) :
     sealed class GameViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         abstract fun bind(game: Game)
 
-        class SmallGameViewHolder(val binding: CardGameBinding) : GameViewHolder(binding.root) {
+        class SmallGameViewHolder(val binding: CardGameBinding, private val activity: AppCompatActivity) : GameViewHolder(binding.root) {
             lateinit var game: Game
 
             init {
@@ -201,7 +201,7 @@ class GameAdapter(private val activity: AppCompatActivity) :
             }
         }
 
-        class LargeGameViewHolder(val binding: CardGameLargeBinding) : GameViewHolder(binding.root) {
+        class LargeGameViewHolder(val binding: CardGameLargeBinding, private val activity: AppCompatActivity) : GameViewHolder(binding.root) {
             lateinit var game: Game
 
             init {
