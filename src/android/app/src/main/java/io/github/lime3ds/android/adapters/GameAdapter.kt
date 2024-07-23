@@ -162,7 +162,6 @@ class GameAdapter(private val activity: AppCompatActivity, private val inflater:
 
             binding.textGameTitle.text = game.title
             binding.textCompany.text = game.company
-            binding.textFilename.text = game.filename
             binding.textGameRegion.text = game.regions
 
 
