@@ -158,10 +158,6 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool up
     // so just calculate them both even if the other isn't showing.
     FramebufferLayout res{width, height, !swapped, swapped, {}, {}, !upright};
 
-    Common::Rectangle<u32> screen_window_area{0, 0, width, height};
-    Common::Rectangle<u32> top_screen;
-    Common::Rectangle<u32> bot_screen;
-    float emulation_aspect_ratio;
     float aspect_ratio;
     switch (Settings::values.screen_aspect_ratio.GetValue()) {
         case Settings::AspectRatio::Original3DS:
@@ -180,14 +176,18 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool up
             aspect_ratio = 21.0f / 9.0f;
             break;
     }
+
+    Common::Rectangle<u32> screen_window_area{0, 0, width, height};
+    Common::Rectangle<u32> top_screen;
+    Common::Rectangle<u32> bot_screen;
+    float emulation_aspect_ratio = aspect_ratio;
+
     if (upright) {
-        top_screen = MaxRectangle(screen_window_area, aspect_ratio);
-        bot_screen = MaxRectangle(screen_window_area, aspect_ratio);
-        emulation_aspect_ratio = aspect_ratio;
+        top_screen = MaxRectangle(screen_window_area, 1.0f / aspect_ratio);
+        bot_screen = MaxRectangle(screen_window_area, 1.0f / aspect_ratio);
     } else {
         top_screen = MaxRectangle(screen_window_area, aspect_ratio);
         bot_screen = MaxRectangle(screen_window_area, aspect_ratio);
-        emulation_aspect_ratio = aspect_ratio;
     }
 
     const bool stretched = (Settings::values.screen_top_stretch.GetValue() && !swapped) ||
