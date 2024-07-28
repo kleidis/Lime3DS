@@ -513,7 +513,7 @@ void Config::ReadLayoutValues() {
     ReadGlobalSetting(Settings::values.filter_mode);
     ReadGlobalSetting(Settings::values.pp_shader_name);
     ReadGlobalSetting(Settings::values.anaglyph_shader_name);
-    ReadGlobalSettings(Settings::values.screen_aspect_ratio);
+    ReadGlobalSetting(Settings::values.screen_aspect_ratio);
     ReadGlobalSetting(Settings::values.layout_option);
     ReadGlobalSetting(Settings::values.swap_screen);
     ReadGlobalSetting(Settings::values.upright_screen);
@@ -1068,7 +1068,7 @@ void Config::SaveLayoutValues() {
     WriteGlobalSetting(Settings::values.pp_shader_name);
     WriteGlobalSetting(Settings::values.anaglyph_shader_name);
     WriteGlobalSetting(Settings::values.layout_option);
-    WriteGlobalSettings(Settings::values.screen_aspect_ratio);
+    WriteGlobalSetting(Settings::values.screen_aspect_ratio);
     WriteGlobalSetting(Settings::values.swap_screen);
     WriteGlobalSetting(Settings::values.upright_screen);
     WriteGlobalSetting(Settings::values.large_screen_proportion);
