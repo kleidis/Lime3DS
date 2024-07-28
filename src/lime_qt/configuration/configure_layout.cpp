@@ -51,7 +51,7 @@ ConfigureLayout::ConfigureLayout(QWidget* parent)
     });
 
     // Connect aspect_ratio_combobox to update Settings::values.screen_aspect_ratio
-    connect(ui->aspect_ratio_combobox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, [this](int currentIndex) {
+    connect(ui->aspect_ratio_combobox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [](int currentIndex) {
         Settings::values.screen_aspect_ratio = static_cast<Settings::AspectRatio>(currentIndex);
     });
 }
@@ -119,7 +119,7 @@ void ConfigureLayout::ApplyConfiguration() {
     Settings::values.bg_green = static_cast<float>(bg_color.greenF());
     Settings::values.bg_blue = static_cast<float>(bg_color.blueF());
 
-    Settings::values.screen_aspect_ratio = static_cast<Settings::ScreenAspectRatio>(ui->aspect_ratio_combobox->currentIndex());
+    Settings::values.screen_aspect_ratio = static_cast<Settings::AspectRatio>(ui->aspect_ratio_combobox->currentIndex());
 }
 
 void ConfigureLayout::SetupPerGameUI() {
