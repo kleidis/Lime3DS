@@ -98,6 +98,9 @@ void ConfigureLayout::SetConfiguration() {
             static_cast<int>(Settings::values.layout_option.GetValue()));
     }
 
+    // Set the aspect ratio ComboBox to the saved value
+    ui->aspect_ratio_combobox->setCurrentIndex(static_cast<int>(Settings::values.screen_aspect_ratio.GetValue()));
+
     ui->toggle_swap_screen->setChecked(Settings::values.swap_screen.GetValue());
     ui->toggle_upright_screen->setChecked(Settings::values.upright_screen.GetValue());
     ui->large_screen_proportion->setValue(Settings::values.large_screen_proportion.GetValue());

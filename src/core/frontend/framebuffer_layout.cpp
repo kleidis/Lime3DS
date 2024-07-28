@@ -183,12 +183,11 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool up
     if (upright) {
         top_screen = MaxRectangle(screen_window_area, aspect_ratio);
         bot_screen = MaxRectangle(screen_window_area, aspect_ratio);
-        emulation_aspect_ratio =
-            (swapped) ? aspect_ratio : aspect_ratio;
+        emulation_aspect_ratio = aspect_ratio;
     } else {
         top_screen = MaxRectangle(screen_window_area, aspect_ratio);
         bot_screen = MaxRectangle(screen_window_area, aspect_ratio);
-        emulation_aspect_ratio = (swapped) ? aspect_ratio : aspect_ratio;
+        emulation_aspect_ratio = aspect_ratio;
     }
 
     const bool stretched = (Settings::values.screen_top_stretch.GetValue() && !swapped) ||
