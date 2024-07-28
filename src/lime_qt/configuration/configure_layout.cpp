@@ -84,6 +84,16 @@ ConfigureLayout::ConfigureLayout(QWidget* parent)
     connect(ui->aspect_ratio_combobox, QOverload<int>::of(&QComboBox::activated), [](int index) {
         Settings::values.screen_aspect_ratio = static_cast<Settings::AspectRatio>(index);
     });
+
+    // Connect the layout combobox signal to update the aspect ratio combobox
+    connect(ui->layout_combobox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
+            [this](int currentIndex) {
+                bool is_single_screen = (currentIndex == (uint)(Settings::LayoutOption::SingleScreen));
+                ui->aspect_ratio_combobox->setEnabled(is_single_screen);
+                if (!is_single_screen) {
+                    ui->aspect_ratio_combobox->setCurrentIndex(static_cast<int>(Settings::AspectRatio::Original3DS));
+                }
+            });
 }
 
 ConfigureLayout::~ConfigureLayout() = default;
@@ -133,6 +143,13 @@ void ConfigureLayout::SetConfiguration() {
     pixmap.fill(bg_color);
     const QIcon color_icon(pixmap);
     ui->bg_button->setIcon(color_icon);
+
+    // Disable aspect ratio ComboBox if layout is not Single Screen
+    bool is_single_screen = (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SingleScreen);
+    ui->aspect_ratio_combobox->setEnabled(is_single_screen);
+    if (!is_single_screen) {
+        ui->aspect_ratio_combobox->setCurrentIndex(static_cast<int>(Settings::AspectRatio::Original3DS));
+    }
 }
 
 void ConfigureLayout::RetranslateUI() {
@@ -168,6 +185,9 @@ void ConfigureLayout::ApplyConfiguration() {
     Settings::values.bg_red = static_cast<float>(bg_color.redF());
     Settings::values.bg_green = static_cast<float>(bg_color.greenF());
     Settings::values.bg_blue = static_cast<float>(bg_color.blueF());
+
+    // Save the aspect ratio setting
+    Settings::values.screen_aspect_ratio = static_cast<Settings::AspectRatio>(ui->aspect_ratio_combobox->currentIndex());
 }
 
 void ConfigureLayout::SetupPerGameUI() {
