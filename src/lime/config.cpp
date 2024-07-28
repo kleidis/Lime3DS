@@ -366,6 +366,9 @@ void Config::ReadValues() {
         sdl2_config->GetString("Video Dumping", "audio_encoder_options", "");
     Settings::values.audio_bitrate =
         sdl2_config->GetInteger("Video Dumping", "audio_bitrate", 64000);
+
+    // New aspect ratio setting
+    ReadSetting("Layout", Settings::values.screen_aspect_ratio);
 }
 
 void Config::Reload() {

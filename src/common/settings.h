@@ -91,6 +91,14 @@ enum class TextureSampling : u32 {
     Linear = 2,
 };
 
+enum class AspectRatio {
+    Original3DS, // Default 3DS aspect ratio
+    Aspect_4_3,
+    Aspect_16_9,
+    Aspect_16_10,
+    Aspect_21_9
+};
+
 namespace NativeButton {
 
 enum Values {
@@ -565,6 +573,9 @@ struct Values {
     std::string audio_encoder;
     std::string audio_encoder_options;
     u64 audio_bitrate;
+
+    // New aspect ratio setting
+    Setting<AspectRatio> screen_aspect_ratio{AspectRatio::Original3DS, "screen_aspect_ratio"};
 };
 
 extern Values values;

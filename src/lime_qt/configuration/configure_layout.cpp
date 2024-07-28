@@ -79,6 +79,11 @@ ConfigureLayout::ConfigureLayout(QWidget* parent)
         const QIcon color_icon(pixmap);
         ui->bg_button->setIcon(color_icon);
     });
+
+    // Connect the aspect ratio combobox signal
+    connect(ui->aspect_ratio_combobox, QOverload<int>::of(&QComboBox::activated), [](int index) {
+        Settings::values.screen_aspect_ratio = static_cast<Settings::AspectRatio>(index);
+    });
 }
 
 ConfigureLayout::~ConfigureLayout() = default;

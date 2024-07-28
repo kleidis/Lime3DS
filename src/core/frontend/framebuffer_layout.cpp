@@ -162,6 +162,24 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool up
     Common::Rectangle<u32> top_screen;
     Common::Rectangle<u32> bot_screen;
     float emulation_aspect_ratio;
+    float aspect_ratio;
+    switch (Settings::values.screen_aspect_ratio.GetValue()) {
+        case Settings::AspectRatio::Original3DS:
+            aspect_ratio = TOP_SCREEN_ASPECT_RATIO; // Assuming this is the original aspect ratio
+            break;
+        case Settings::AspectRatio::Aspect_4_3:
+            aspect_ratio = 4.0f / 3.0f;
+            break;
+        case Settings::AspectRatio::Aspect_16_9:
+            aspect_ratio = 16.0f / 9.0f;
+            break;
+        case Settings::AspectRatio::Aspect_16_10:
+            aspect_ratio = 16.0f / 10.0f;
+            break;
+        case Settings::AspectRatio::Aspect_21_9:
+            aspect_ratio = 21.0f / 9.0f;
+            break;
+    }
     if (upright) {
         top_screen = MaxRectangle(screen_window_area, TOP_SCREEN_UPRIGHT_ASPECT_RATIO);
         bot_screen = MaxRectangle(screen_window_area, BOT_SCREEN_UPRIGHT_ASPECT_RATIO);

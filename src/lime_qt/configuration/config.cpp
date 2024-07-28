@@ -540,6 +540,9 @@ void Config::ReadLayoutValues() {
         ReadBasicSetting(Settings::values.screen_bottom_topbottom_padding);
     }
 
+    int aspect_ratio_index = ReadSetting(QStringLiteral("screen_aspect_ratio"), static_cast<int>(Settings::AspectRatio::Original3DS)).toInt();
+    Settings::values.screen_aspect_ratio = static_cast<Settings::AspectRatio>(aspect_ratio_index);
+
     qt_config->endGroup();
 }
 
@@ -1059,6 +1062,8 @@ void Config::SaveDebuggingValues() {
 
 void Config::SaveLayoutValues() {
     qt_config->beginGroup(QStringLiteral("Layout"));
+
+    WriteSetting(QStringLiteral("screen_aspect_ratio"), static_cast<int>(Settings::values.screen_aspect_ratio), static_cast<int>(Settings::AspectRatio::Original3DS));
 
     WriteGlobalSetting(Settings::values.render_3d);
     WriteGlobalSetting(Settings::values.factor_3d);
