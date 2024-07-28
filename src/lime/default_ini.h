@@ -238,6 +238,10 @@ preload_textures =
 # 0: Off, 1 (default): On
 async_custom_loading =
 
+# Aspect ratio for the single screen layout.
+# 0: Original 3DS (default), 1: 4:3, 2: 16:9, 3: 16:10, 4: 21:9
+screen_aspect_ratio = 0
+
 [Audio]
 # Whether or not to enable DSP LLE
 # 0 (default): No, 1: Yes

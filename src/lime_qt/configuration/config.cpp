@@ -513,8 +513,7 @@ void Config::ReadLayoutValues() {
     ReadGlobalSetting(Settings::values.filter_mode);
     ReadGlobalSetting(Settings::values.pp_shader_name);
     ReadGlobalSetting(Settings::values.anaglyph_shader_name);
-    int aspect_ratio_index = ReadSetting(QStringLiteral("screen_aspect_ratio"), static_cast<int>(Settings::AspectRatio::Original3DS)).toInt();
-    Settings::values.screen_aspect_ratio = static_cast<Settings::AspectRatio>(aspect_ratio_index);
+    ReadGlobalSettings(Settings::values.screen_aspect_ratio);
     ReadGlobalSetting(Settings::values.layout_option);
     ReadGlobalSetting(Settings::values.swap_screen);
     ReadGlobalSetting(Settings::values.upright_screen);
@@ -1069,7 +1068,7 @@ void Config::SaveLayoutValues() {
     WriteGlobalSetting(Settings::values.pp_shader_name);
     WriteGlobalSetting(Settings::values.anaglyph_shader_name);
     WriteGlobalSetting(Settings::values.layout_option);
-    WriteSetting(QStringLiteral("screen_aspect_ratio"), static_cast<int>(Settings::values.screen_aspect_ratio.GetValue()), static_cast<int>(Settings::AspectRatio::Original3DS));
+    WriteGlobalSettings(Settings::values.screen_aspect_ratio);
     WriteGlobalSetting(Settings::values.swap_screen);
     WriteGlobalSetting(Settings::values.upright_screen);
     WriteGlobalSetting(Settings::values.large_screen_proportion);

@@ -160,6 +160,8 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.bg_blue);
 
     // Layout
+ReadSetting("Layout", Settings::values.screen_aspect_ratio);
+
     ReadSetting("Layout", Settings::values.layout_option);
     ReadSetting("Layout", Settings::values.swap_screen);
     ReadSetting("Layout", Settings::values.upright_screen);
@@ -366,9 +368,6 @@ void Config::ReadValues() {
         sdl2_config->GetString("Video Dumping", "audio_encoder_options", "");
     Settings::values.audio_bitrate =
         sdl2_config->GetInteger("Video Dumping", "audio_bitrate", 64000);
-
-    // New aspect ratio setting
-    ReadSetting("Layout", Settings::values.screen_aspect_ratio);
 }
 
 void Config::Reload() {
