@@ -164,18 +164,17 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool up
             aspect_ratio = TOP_SCREEN_ASPECT_RATIO; // Assuming this is the original aspect ratio
             break;
         case Settings::AspectRatio::Aspect_4_3:
-            aspect_ratio = 4.0f / 3.0f;
+            aspect_ratio = 3.0f / 4.0f;
             break;
         case Settings::AspectRatio::Aspect_16_9:
-            aspect_ratio = 16.0f / 9.0f;
+            aspect_ratio = 9.0f / 16.0f;
             break;
         case Settings::AspectRatio::Aspect_16_10:
-            aspect_ratio = 16.0f / 10.0f;
+            aspect_ratio = 10.0f / 16.0f;
             break;
         case Settings::AspectRatio::Aspect_21_9:
-            aspect_ratio = 21.0f / 9.0f;
+            aspect_ratio = 9.0f / 21.0f;
             break;
-    }
 
     Common::Rectangle<u32> screen_window_area{0, 0, width, height};
     Common::Rectangle<u32> top_screen;
