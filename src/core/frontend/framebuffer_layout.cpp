@@ -181,14 +181,14 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool up
             break;
     }
     if (upright) {
-        top_screen = MaxRectangle(screen_window_area, TOP_SCREEN_UPRIGHT_ASPECT_RATIO);
-        bot_screen = MaxRectangle(screen_window_area, BOT_SCREEN_UPRIGHT_ASPECT_RATIO);
+        top_screen = MaxRectangle(screen_window_area, aspect_ratio);
+        bot_screen = MaxRectangle(screen_window_area, aspect_ratio);
         emulation_aspect_ratio =
-            (swapped) ? BOT_SCREEN_UPRIGHT_ASPECT_RATIO : TOP_SCREEN_UPRIGHT_ASPECT_RATIO;
+            (swapped) ? aspect_ratio : aspect_ratio;
     } else {
-        top_screen = MaxRectangle(screen_window_area, TOP_SCREEN_ASPECT_RATIO);
-        bot_screen = MaxRectangle(screen_window_area, BOT_SCREEN_ASPECT_RATIO);
-        emulation_aspect_ratio = (swapped) ? BOT_SCREEN_ASPECT_RATIO : TOP_SCREEN_ASPECT_RATIO;
+        top_screen = MaxRectangle(screen_window_area, aspect_ratio);
+        bot_screen = MaxRectangle(screen_window_area, aspect_ratio);
+        emulation_aspect_ratio = (swapped) ? aspect_ratio : aspect_ratio;
     }
 
     const bool stretched = (Settings::values.screen_top_stretch.GetValue() && !swapped) ||
