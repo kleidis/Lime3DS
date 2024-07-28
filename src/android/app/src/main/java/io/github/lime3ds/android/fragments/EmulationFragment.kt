@@ -23,6 +23,7 @@ import android.view.ViewGroup
 import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
+import android.util.DisplayMetrics
 import androidx.activity.OnBackPressedCallback
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.Insets
@@ -54,6 +55,7 @@ import io.github.lime3ds.android.databinding.FragmentEmulationBinding
 import io.github.lime3ds.android.display.ScreenAdjustmentUtil
 import io.github.lime3ds.android.display.ScreenLayout
 import io.github.lime3ds.android.features.settings.model.SettingsViewModel
+import io.github.lime3ds.android.features.settings.model.IntSetting
 import io.github.lime3ds.android.features.settings.ui.SettingsActivity
 import io.github.lime3ds.android.features.settings.utils.SettingsFile
 import io.github.lime3ds.android.model.Game
@@ -169,6 +171,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             binding.doneControlConfig.visibility = View.GONE
             binding.surfaceInputOverlay.setIsInEditMode(false)
         }
+
+        updateAspectRatio()
 
         // Show/hide the "Show FPS" overlay
         updateShowFpsOverlay()
@@ -422,6 +426,30 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         return binding.drawerLayout.isOpen
     }
 
+    private fun updateAspectRatio() {
+        val activityOrientation = resources.configuration
+        val displayMetrics = requireContext().resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+        val screenHeight = displayMetrics.heightPixels
+
+        val aspectRatio = when (IntSetting.ASPECT_RATIO.int) {
+            0 -> null
+            1 -> Pair(1280, 720) // 16:9
+            2 -> Pair(1280, 960) // 4:3
+            3 -> Pair(1280, 549) // 21:9
+            4 -> Pair(1280, 800) // 16:10
+            else -> Pair(screenWidth, screenHeight) // Stretch to fit window
+        }
+
+        if (NativeLibrary.isRunning()) {
+            if (aspectRatio != null) {
+                binding.surfaceEmulation.setDimensions(aspectRatio.first, aspectRatio.second, activityOrientation)
+                emulationState.updateSurface()
+                Log.warning("[EmulationFragment] Setting dimensions: ${aspectRatio.first}x${aspectRatio.second}")
+            }
+        }
+    }
+
     private fun togglePause() {
         if(emulationState.isPaused) {
             emulationState.unpause()
@@ -443,6 +471,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         } else {
             setupCitraDirectoriesThenStartEmulation()
         }
+
+        updateAspectRatio()
     }
 
     override fun onPause() {
@@ -1160,6 +1190,13 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             this.surface = surface
             if (this.surface != null) {
                 runWithValidSurface()
+            }
+        }
+
+        @Synchronized
+        fun updateSurface() {
+            surface?.let {
+                NativeLibrary.surfaceChanged(it)
             }
         }
 

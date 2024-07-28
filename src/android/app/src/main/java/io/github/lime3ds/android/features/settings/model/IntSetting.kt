@@ -44,6 +44,7 @@ enum class IntSetting(
     USE_FRAME_LIMIT("use_frame_limit", Settings.SECTION_RENDERER, 1),
     DELAY_RENDER_THREAD_US("delay_game_render_thread_us", Settings.SECTION_RENDERER, 0),
     USE_ARTIC_BASE_CONTROLLER("use_artic_base_controller", Settings.SECTION_CONTROLS, 0);
+    ASPECT_RATIO("aspect_ratio", Settings.SECTION_RENDERER, 0);
 
     override var int: Int = defaultValue
 
@@ -72,6 +73,7 @@ enum class IntSetting(
             CPU_JIT,
             ASYNC_CUSTOM_LOADING,
             AUDIO_INPUT_TYPE,
+            ASPECT_RATIO,
             USE_ARTIC_BASE_CONTROLLER
         )
 

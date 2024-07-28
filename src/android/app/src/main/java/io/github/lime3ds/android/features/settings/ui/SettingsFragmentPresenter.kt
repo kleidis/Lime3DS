@@ -727,6 +727,17 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
             add(
+                SingleChoiceSetting(
+                    IntSetting.ASPECT_RATIO,
+                    R.string.aspect_ratio,
+                    0,
+                    R.array.aspectRatioNames,
+                    R.array.aspectRatioValues,
+                    IntSetting.ASPECT_RATIO.key,
+                    IntSetting.ASPECT_RATIO.defaultValue
+                )
+            )
+            add(
                 SwitchSetting(
                     IntSetting.SHADERS_ACCURATE_MUL,
                     R.string.shaders_accurate_mul,
