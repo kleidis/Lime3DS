@@ -175,6 +175,7 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool up
         case Settings::AspectRatio::Aspect_21_9:
             aspect_ratio = 9.0f / 21.0f;
             break;
+    }
 
     Common::Rectangle<u32> screen_window_area{0, 0, width, height};
     Common::Rectangle<u32> top_screen;
