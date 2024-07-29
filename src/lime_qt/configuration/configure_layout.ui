@@ -47,37 +47,8 @@
          <item>
           <widget class="QLabel" name="layout_label">
            <property name="text">
-            <string>Aspect Ratio / Screen Layout</string>
+            <string> Screen Layout / Aspect Ratio </string>
            </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="aspect_ratio_combobox">
-           <item>
-            <property name="text">
-             <string>Original 3DS</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>4:3</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>16:9</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>16:10</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>21:9</string>
-            </property>
-           </item>
           </widget>
          </item>
          <item>
@@ -115,6 +86,35 @@
            <item>
             <property name="text">
              <string>Custom Layout</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="aspect_ratio_combobox">
+           <item>
+            <property name="text">
+             <string>Original 3DS</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>4:3</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>16:9</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>16:10</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>21:9</string>
             </property>
            </item>
           </widget>

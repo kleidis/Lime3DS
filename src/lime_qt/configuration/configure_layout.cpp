@@ -72,6 +72,15 @@ void ConfigureLayout::SetConfiguration() {
     ui->aspect_ratio_combobox->setCurrentIndex(
         static_cast<int>(Settings::values.screen_aspect_ratio.GetValue()));
 
+    // Enable or disable aspect_ratio_combobox based on layout_option
+    bool enable_aspect_ratio = (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SingleScreen ||
+                                Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows);
+    ui->aspect_ratio_combobox->setEnabled(enable_aspect_ratio);
+
+    // Lock Single Screen Layout section if aspect ratio isn't Original 3DS
+    bool lock_single_screen_layout = (Settings::values.screen_aspect_ratio.GetValue() != Settings::AspectRatio::Original3DS);
+    ui->single_screen_layout_config_group->setEnabled(!lock_single_screen_layout);
+
     ui->toggle_swap_screen->setChecked(Settings::values.swap_screen.GetValue());
     ui->toggle_upright_screen->setChecked(Settings::values.upright_screen.GetValue());
     ui->large_screen_proportion->setValue(Settings::values.large_screen_proportion.GetValue());

@@ -159,21 +159,27 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool up
     FramebufferLayout res{width, height, !swapped, swapped, {}, {}, !upright};
 
     float aspect_ratio;
+    float bottom_aspect_ratio;
     switch (Settings::values.screen_aspect_ratio.GetValue()) {
         case Settings::AspectRatio::Original3DS:
-            aspect_ratio = TOP_SCREEN_ASPECT_RATIO; // Assuming this is the original aspect ratio
+            aspect_ratio = TOP_SCREEN_ASPECT_RATIO; 
+            bottom_aspect_ratio = BOT_SCREEN_ASPECT_RATIO;
             break;
         case Settings::AspectRatio::Aspect_4_3:
             aspect_ratio = 3.0f / 4.0f;
+            bottom_aspect_ratio = 3.0f / 4.0f;
             break;
         case Settings::AspectRatio::Aspect_16_9:
             aspect_ratio = 9.0f / 16.0f;
+            bottom_aspect_ratio = 9.0f / 16.0f;
             break;
         case Settings::AspectRatio::Aspect_16_10:
             aspect_ratio = 10.0f / 16.0f;
+            bottom_aspect_ratio = 10.0f / 16.0f;
             break;
         case Settings::AspectRatio::Aspect_21_9:
             aspect_ratio = 9.0f / 21.0f;
+            bottom_aspect_ratio = 9.0f / 21.0f;
             break;
     }
 
@@ -184,10 +190,10 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool up
 
     if (upright) {
         top_screen = MaxRectangle(screen_window_area, 1.0f / aspect_ratio);
-        bot_screen = MaxRectangle(screen_window_area, 1.0f / aspect_ratio);
+        bot_screen = MaxRectangle(screen_window_area, 1.0f / bottom_aspect_ratio);
     } else {
         top_screen = MaxRectangle(screen_window_area, aspect_ratio);
-        bot_screen = MaxRectangle(screen_window_area, aspect_ratio);
+        bot_screen = MaxRectangle(screen_window_area, bottom_aspect_ratio);
     }
 
     const bool stretched = (Settings::values.screen_top_stretch.GetValue() && !swapped) ||
@@ -212,8 +218,9 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool up
         top_screen = top_screen.TranslateY((height - top_screen.GetHeight()) / 2);
         bot_screen = bot_screen.TranslateY((height - bot_screen.GetHeight()) / 2);
     }
-    res.top_screen = top_screen;
-    res.bottom_screen = bot_screen;
+    res.top_screen = swapped ? top_screen.TranslateY(bot_screen.GetHeight()) : top_screen;
+    res.bottom_screen = swapped ? bot_screen : bot_screen.TranslateY(top_screen.GetHeight());
+
     return res;
 }
 
