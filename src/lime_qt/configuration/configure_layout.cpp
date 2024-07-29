@@ -52,7 +52,7 @@ ConfigureLayout::ConfigureLayout(QWidget* parent)
 
     // Connect aspect_ratio_combobox to update Settings::values.screen_aspect_ratio
     connect(ui->aspect_ratio_combobox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [](int currentIndex) {
-        Settings::values.screen_aspect_ratio = static_cast<Settings::AspectRatio>(currentIndex);
+        Settings::values.screen_aspect_ratio.SetValue(static_cast<Settings::AspectRatio>(currentIndex));
     });
 }
 
@@ -67,6 +67,10 @@ void ConfigureLayout::SetConfiguration() {
         ui->layout_combobox->setCurrentIndex(
             static_cast<int>(Settings::values.layout_option.GetValue()));
     }
+
+    // Set the aspect ratio combo box index
+    ui->aspect_ratio_combobox->setCurrentIndex(
+        static_cast<int>(Settings::values.screen_aspect_ratio.GetValue()));
 
     ui->toggle_swap_screen->setChecked(Settings::values.swap_screen.GetValue());
     ui->toggle_upright_screen->setChecked(Settings::values.upright_screen.GetValue());

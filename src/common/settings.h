@@ -575,7 +575,7 @@ struct Values {
     u64 audio_bitrate;
 
     // New aspect ratio setting
-    Setting<AspectRatio> screen_aspect_ratio{AspectRatio::Original3DS, "screen_aspect_ratio"};
+    SwitchableSetting<AspectRatio> screen_aspect_ratio{AspectRatio::Original3DS, "screen_aspect_ratio"};
 };
 
 extern Values values;
