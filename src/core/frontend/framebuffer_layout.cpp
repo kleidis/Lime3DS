@@ -400,9 +400,28 @@ FramebufferLayout HybridScreenLayout(u32 width, u32 height, bool swapped, bool u
 }
 
 FramebufferLayout SeparateWindowsLayout(u32 width, u32 height, bool is_secondary, bool upright) {
-    // When is_secondary is true, we disable the top screen, and enable the bottom screen.
-    // The same logic is found in the SingleFrameLayout using the is_swapped bool.
-    is_secondary = Settings::values.swap_screen ? !is_secondary : is_secondary;
+    if (is_secondary) {
+        // Handle the second screen with the appropriate aspect ratio
+        float aspect_ratio;
+        switch (Settings::values.screen_aspect_ratio.GetValue()) {
+            case Settings::AspectRatio::Original3DS:
+                aspect_ratio = BOT_SCREEN_ASPECT_RATIO;
+                break;
+            case Settings::AspectRatio::Aspect_4_3:
+                aspect_ratio = 3.0f / 4.0f;
+                break;
+            case Settings::AspectRatio::Aspect_16_9:
+                aspect_ratio = 9.0f / 16.0f;
+                break;
+            case Settings::AspectRatio::Aspect_16_10:
+                aspect_ratio = 10.0f / 16.0f;
+                break;
+            case Settings::AspectRatio::Aspect_21_9:
+                aspect_ratio = 9.0f / 21.0f;
+                break;
+        }
+        height = static_cast<u32>(width / aspect_ratio);
+    }
     return SingleFrameLayout(width, height, is_secondary, upright);
 }
 
