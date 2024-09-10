@@ -120,7 +120,6 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         (binding.navigationView as NavigationBarView).setOnItemReselectedListener {
             when (it.itemId) {
                 R.id.gamesFragment -> gamesViewModel.setShouldScrollToTop(true)
-                R.id.searchFragment -> gamesViewModel.setSearchFocused(true)
                 R.id.homeSettingsFragment -> SettingsActivity.launch(
                     this,
                     SettingsFile.FILE_NAME_CONFIG,

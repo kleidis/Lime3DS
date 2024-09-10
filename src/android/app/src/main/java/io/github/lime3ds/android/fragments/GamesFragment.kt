@@ -5,15 +5,19 @@
 package io.github.lime3ds.android.fragments
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.MarginLayoutParams
+import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -23,8 +27,12 @@ import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.transition.MaterialFadeThrough
+import info.debatty.java.stringsimilarity.Jaccard
+import info.debatty.java.stringsimilarity.JaroWinkler
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.time.temporal.ChronoField
+import java.util.Locale
 import io.github.lime3ds.android.LimeApplication
 import io.github.lime3ds.android.R
 import io.github.lime3ds.android.adapters.GameAdapter
@@ -40,6 +48,8 @@ class GamesFragment : Fragment() {
 
     private val gamesViewModel: GamesViewModel by activityViewModels()
     private val homeViewModel: HomeViewModel by activityViewModels()
+
+    private lateinit var preferences: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,6 +71,8 @@ class GamesFragment : Fragment() {
         homeViewModel.setNavigationVisibility(visible = true, animated = true)
         homeViewModel.setStatusBarShadeVisibility(visible = true)
         val inflater = LayoutInflater.from(requireContext())
+
+        preferences = PreferenceManager.getDefaultSharedPreferences(LimeApplication.appContext)
 
         binding.gridGames.apply {
             layoutManager = GridLayoutManager(
@@ -89,14 +101,26 @@ class GamesFragment : Fragment() {
                     com.google.android.material.R.attr.colorOnPrimary
                 )
             )
-
-            // Make sure the loading indicator appears even if the layout is told to refresh before being fully drawn
             post {
                 if (_binding == null) {
                     return@post
                 }
                 binding.swipeRefresh.isRefreshing = gamesViewModel.isReloading.value
             }
+        }
+
+        binding.chipGroup.setOnCheckedStateChangeListener { _, _ -> filterAndSearch() }
+
+        binding.searchText.doOnTextChanged { text: CharSequence?, _: Int, _: Int, _: Int ->
+            if (text.toString().isNotEmpty()) {
+                binding.clearButton.visibility = View.VISIBLE
+                binding.swipeRefresh.isEnabled = false
+            } else {
+                binding.clearButton.visibility = View.INVISIBLE
+                binding.swipeRefresh.isEnabled = true
+                gamesViewModel.setSearchedGames(gamesViewModel.games.value)
+            }
+            filterAndSearch()
         }
 
         viewLifecycleOwner.lifecycleScope.apply {
@@ -107,7 +131,7 @@ class GamesFragment : Fragment() {
                         if (gamesViewModel.games.value.isEmpty() && !isReloading) {
                             binding.noticeText.visibility = View.VISIBLE
                         } else {
-                            binding.noticeText.visibility = View.INVISIBLE
+                            binding.noticeText.visibility = View.GONE
                         }
                     }
                 }
@@ -128,18 +152,35 @@ class GamesFragment : Fragment() {
                 }
             }
             launch {
-                repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                    gamesViewModel.shouldScrollToTop.collect {
+                repeatOnLifecycle(Lifecycle.State.CREATED) {
+                    gamesViewModel.searchFocused.collect {
                         if (it) {
-                            scrollToTop()
-                            gamesViewModel.setShouldScrollToTop(false)
+                            focusSearch()
+                            gamesViewModel.setSearchFocused(false)
+                        }
+                    }
+                }
+            }
+            launch {
+                repeatOnLifecycle(Lifecycle.State.CREATED) {
+                    gamesViewModel.searchedGames.collect {
+                        (binding.gridGames.adapter as GameAdapter).submitList(it)
+                        if (it.isEmpty()) {
+                            binding.noticeText.visibility = View.VISIBLE
+                        } else {
+                            binding.noticeText.visibility = View.GONE
                         }
                     }
                 }
             }
         }
 
+        binding.clearButton.setOnClickListener { binding.searchText.setText("") }
+
+        binding.searchBackground.setOnClickListener { focusSearch() }
+
         setInsets()
+        filterAndSearch()
     }
 
     override fun onDestroyView() {
@@ -157,9 +198,58 @@ class GamesFragment : Fragment() {
         }
     }
 
-    private fun scrollToTop() {
+    private fun filterAndSearch() {
+        val searchTerm = binding.searchText.text.toString().lowercase(Locale.getDefault())
+        val baseList = gamesViewModel.games.value
+
+        val filteredList: List<Game> = when (binding.chipGroup.checkedChipId) {
+            R.id.chip_recently_played -> {
+                baseList.filter {
+                    val lastPlayedTime = preferences.getLong(it.keyLastPlayedTime, 0L)
+                    lastPlayedTime > (System.currentTimeMillis() - ChronoField.MILLI_OF_DAY.range().maximum)
+                }
+            }
+            R.id.chip_recently_added -> {
+                baseList.filter {
+                    val addedTime = preferences.getLong(it.keyAddedToLibraryTime, 0L)
+                    addedTime > (System.currentTimeMillis() - ChronoField.MILLI_OF_DAY.range().maximum)
+                }
+            }
+            R.id.chip_installed -> baseList.filter { it.isInstalled }
+            else -> baseList
+        }
+
+        if (searchTerm.isEmpty()) {
+            gamesViewModel.setSearchedGames(filteredList)
+            return
+        }
+
+        val searchAlgorithm = if (searchTerm.length > 1) Jaccard(2) else JaroWinkler()
+        val sortedList: List<Game> = filteredList.mapNotNull { game ->
+            val title = game.title.lowercase(Locale.getDefault())
+            val score = searchAlgorithm.similarity(searchTerm, title)
+            if (score > 0.03) {
+                ScoredGame(score, game)
+            } else {
+                null
+            }
+        }.sortedByDescending { it.score }.map { it.item }
+
+        if (sortedList.isEmpty()) {
+            binding.noticeText.visibility = View.VISIBLE
+        } else {
+            binding.noticeText.visibility = View.GONE
+        }
+
+        gamesViewModel.setSearchedGames(sortedList)
+    }
+
+    private fun focusSearch() {
         if (_binding != null) {
-            binding.gridGames.smoothScrollToPosition(0)
+            binding.searchText.requestFocus()
+            val imm = requireActivity()
+                .getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager?
+            imm?.showSoftInput(binding.searchText, InputMethodManager.SHOW_IMPLICIT)
         }
     }
 
@@ -173,11 +263,11 @@ class GamesFragment : Fragment() {
             val spacingNavigation = resources.getDimensionPixelSize(R.dimen.spacing_navigation)
             val spacingNavigationRail =
                 resources.getDimensionPixelSize(R.dimen.spacing_navigation_rail)
+            val chipSpacing = resources.getDimensionPixelSize(R.dimen.spacing_chip)
 
-            binding.gridGames.updatePadding(
-                top = barInsets.top + extraListSpacing,
-                bottom = barInsets.bottom + spacingNavigation + extraListSpacing
-            )
+            binding.gridGames.updatePadding(bottom = barInsets.bottom + spacingNavigation + extraListSpacing)
+            binding.frameSearch.updatePadding(top = barInsets.top + extraListSpacing)
+            binding.chipGroup.updatePadding(left = chipSpacing, right = chipSpacing + spacingNavigationRail)
 
             binding.swipeRefresh.setProgressViewEndTarget(
                 false,
@@ -200,4 +290,6 @@ class GamesFragment : Fragment() {
 
             windowInsets
         }
+
+    private inner class ScoredGame(val score: Double, val item: Game)
 }

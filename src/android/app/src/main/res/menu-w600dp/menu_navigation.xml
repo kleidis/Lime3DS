@@ -7,11 +7,6 @@
         android:title="@string/home_options" />
 
     <item
-        android:id="@+id/searchFragment"
-        android:icon="@drawable/ic_search"
-        android:title="@string/home_search" />
-
-    <item
         android:id="@+id/gamesFragment"
         android:icon="@drawable/selector_controller"
         android:title="@string/home_games" />
