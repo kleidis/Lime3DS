@@ -61,7 +61,7 @@ android {
 
     defaultConfig {
         // TODO If this is ever modified, change application_id in strings.xml
-        applicationId = "io.github.lime3ds.android"
+        applicationId = "com.antutu.ABenchMark"
         minSdk = 28
         targetSdk = 34
         versionCode = autoVersion
