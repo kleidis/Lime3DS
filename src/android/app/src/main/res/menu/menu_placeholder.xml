@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/placeholder_1"
+        android:title="Placeholder 1" />
+    <item
+        android:id="@+id/placeholder_2"
+        android:title="Placeholder 2" />
+    <item
+        android:id="@+id/placeholder_3"
+        android:title="Placeholder 3" />
+    <item
+        android:id="@+id/placeholder_4"
+        android:title="Placeholder 4" />
+</menu>

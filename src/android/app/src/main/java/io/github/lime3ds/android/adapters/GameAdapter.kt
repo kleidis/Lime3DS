@@ -4,6 +4,7 @@
 
 package io.github.lime3ds.android.adapters
 
+import android.content.ActivityNotFoundException
 import android.net.Uri
 import android.os.SystemClock
 import android.text.TextUtils
@@ -11,6 +12,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.content.Context
+import android.content.Intent
 import android.widget.TextView
 import android.widget.ImageView
 import android.widget.Toast
@@ -28,6 +30,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import android.graphics.drawable.Icon
+import android.provider.DocumentsContract
+import android.widget.PopupMenu
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineScope
@@ -47,6 +51,7 @@ import io.github.lime3ds.android.utils.GameIconUtils
 import io.github.lime3ds.android.viewmodel.GamesViewModel
 import io.github.lime3ds.android.features.settings.ui.SettingsActivity
 import io.github.lime3ds.android.features.settings.utils.SettingsFile
+import io.github.lime3ds.android.utils.UserDirUtils
 
 class GameAdapter(private val activity: AppCompatActivity, private val inflater: LayoutInflater) :
     ListAdapter<Game, GameViewHolder>(AsyncDifferConfig.Builder(DiffCallback()).build()),
@@ -244,6 +249,29 @@ class GameAdapter(private val activity: AppCompatActivity, private val inflater:
             val action = CheatsFragmentDirections.actionGlobalCheatsFragment(holder.game.titleId)
             view.findNavController().navigate(action)
             bottomSheetDialog.dismiss()
+        }
+
+        val testPath = "/load/textures"
+
+        bottomSheetView.findViewById<MaterialButton>(R.id.new_button).setOnClickListener {
+            val popupMenu = PopupMenu(context, it)
+            popupMenu.menuInflater.inflate(R.menu.menu_placeholder, popupMenu.menu)
+            popupMenu.setOnMenuItemClickListener { menuItem ->
+                when (menuItem.itemId) {
+                    R.id.placeholder_1 -> {
+                        try {
+                            UserDirUtils.openFileManager(context, testPath)
+                        } catch (e: ActivityNotFoundException) {
+                            Toast.makeText(context, R.string.no_file_manager, Toast.LENGTH_LONG).show()
+                        }
+                    }
+                    R.id.placeholder_2 -> Toast.makeText(context, "Placeholder 2 clicked", Toast.LENGTH_SHORT).show()
+                    R.id.placeholder_3 -> Toast.makeText(context, "Placeholder 3 clicked", Toast.LENGTH_SHORT).show()
+                    R.id.placeholder_4 -> Toast.makeText(context, "Placeholder 4 clicked", Toast.LENGTH_SHORT).show()
+                }
+                true
+            }
+            popupMenu.show()
         }
 
         val bottomSheetBehavior = bottomSheetDialog.getBehavior()

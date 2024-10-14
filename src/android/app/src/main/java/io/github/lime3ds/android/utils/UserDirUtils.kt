@@ -13,20 +13,33 @@ import android.util.Log
 import java.io.File
 
 object UserDirUtils {
-    // Refresh the cache for the target directory
 
     fun openFileManager(context: Context, targetDir: String) {
-    LimeApplication.documentsTree.refreshCache(targetDir)
+        // Refresh the cache for the target directory
+        LimeApplication.documentsTree.refreshCache(targetDir)
 
         // Check if the target directory exists
-        val targetDirUri = LimeApplication.documentsTree.getUri(targetDir)
+        var targetDirUri = LimeApplication.documentsTree.getUri(targetDir)
         if (!FileUtil.exists(targetDirUri.toString())) {
-            Toast.makeText(
-                context,
-                context.resources.getString(R.string.invalid_directory),
-                Toast.LENGTH_LONG
-            ).show()
-            return
+            // Attempt to create the directory
+            if (!LimeApplication.documentsTree.createDir(targetDir, targetDir)) {
+                Toast.makeText(
+                    context,
+                    context.resources.getString(R.string.invalid_directory),
+                    Toast.LENGTH_LONG
+                ).show()
+                return
+            }
+            // Refresh the URI after attempting to create the directory
+            targetDirUri = LimeApplication.documentsTree.getUri(targetDir)
+            if (!FileUtil.exists(targetDirUri.toString())) {
+                Toast.makeText(
+                    context,
+                    context.resources.getString(R.string.invalid_directory),
+                    Toast.LENGTH_LONG
+                ).show()
+                return
+            }
         }
 
         // Proceed with opening the file manager
