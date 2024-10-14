@@ -278,4 +278,11 @@ class DocumentsTree {
     companion object {
         const val DELIMITER = "/"
     }
+
+    fun refreshCache(filepath: String) {
+        val node = resolvePath(filepath)
+        if (node != null && node.isDirectory) {
+            structTree(node)
+        }
+    }
 }
