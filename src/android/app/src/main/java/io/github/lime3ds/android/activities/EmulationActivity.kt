@@ -45,6 +45,7 @@ import io.github.lime3ds.android.utils.EmulationLifecycleUtil
 import io.github.lime3ds.android.utils.EmulationMenuSettings
 import io.github.lime3ds.android.utils.ThemeUtil
 import io.github.lime3ds.android.viewmodel.EmulationViewModel
+import io.github.lime3ds.android.dialogs.NetPlayDialog
 
 class EmulationActivity : AppCompatActivity() {
     private val preferences: SharedPreferences
@@ -139,6 +140,13 @@ class EmulationActivity : AppCompatActivity() {
         isEmulationRunning = savedInstanceState.getBoolean("isEmulationRunning", false)
     }
 
+    fun addNetPlayMessage(msg: String) {
+        if (msg.isEmpty()) {
+            return
+        }
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+    }
+
     override fun onDestroy() {
         NativeLibrary.enableAdrenoTurboMode(false)
         EmulationLifecycleUtil.clear()
@@ -192,6 +200,11 @@ class EmulationActivity : AppCompatActivity() {
             getString(R.string.emulation_menu_help),
             Toast.LENGTH_LONG
         ).show()
+    }
+
+    fun displayMultiplayerDialog() {
+        val dialog = NetPlayDialog(this)
+        dialog.show()
     }
 
     private fun enableFullscreenImmersive() {

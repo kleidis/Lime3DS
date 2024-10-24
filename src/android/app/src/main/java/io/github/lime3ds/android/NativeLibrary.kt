@@ -21,9 +21,9 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.github.lime3ds.android.activities.EmulationActivity
-import io.github.lime3ds.android.utils.EmulationMenuSettings
 import io.github.lime3ds.android.utils.FileUtil
 import io.github.lime3ds.android.utils.Log
+import io.github.lime3ds.android.dialogs.NetPlayDialog
 import java.lang.ref.WeakReference
 import java.util.Date
 
@@ -639,6 +639,14 @@ object NativeLibrary {
             FileUtil.deleteDocument(path)
         }
 
+    @Keep
+    @JvmStatic
+    fun addNetPlayMessage(type: Int, message: String) {
+        NetPlayManager.addNetPlayMessage(type, message)
+    }
+
+    const val SAVESTATE_SLOT_COUNT = 11
+    const val QUICKSAVE_SLOT = 0
     enum class CoreError {
         ErrorSystemFiles,
         ErrorSavestate,

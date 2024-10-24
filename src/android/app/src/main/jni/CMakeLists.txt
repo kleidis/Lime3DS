@@ -24,6 +24,8 @@ add_library(lime-android SHARED
     game_settings.h
     id_cache.cpp
     id_cache.h
+    multiplayer.cpp
+    multiplayer.h
     native.cpp
     ndk_motion.cpp
     ndk_motion.h

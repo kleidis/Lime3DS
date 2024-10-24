@@ -40,6 +40,7 @@ import io.github.lime3ds.android.R
 import io.github.lime3ds.android.activities.EmulationActivity
 import io.github.lime3ds.android.contracts.OpenFileResultContract
 import io.github.lime3ds.android.databinding.ActivityMainBinding
+import io.github.lime3ds.android.dialogs.NetPlayDialog
 import io.github.lime3ds.android.features.settings.model.Settings
 import io.github.lime3ds.android.features.settings.model.SettingsViewModel
 import io.github.lime3ds.android.features.settings.ui.SettingsActivity
@@ -54,6 +55,8 @@ import io.github.lime3ds.android.utils.PermissionsHandler
 import io.github.lime3ds.android.utils.ThemeUtil
 import io.github.lime3ds.android.viewmodel.GamesViewModel
 import io.github.lime3ds.android.viewmodel.HomeViewModel
+import kotlinx.coroutines.launch
+import java.lang.ref.WeakReference
 
 class MainActivity : AppCompatActivity(), ThemeProvider {
     private lateinit var binding: ActivityMainBinding
@@ -63,6 +66,13 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
     private val settingsViewModel: SettingsViewModel by viewModels()
 
     override var themeId: Int = 0
+
+    companion object {
+        var instance: WeakReference<MainActivity?> = WeakReference(null)
+        fun get(): MainActivity? {
+            return instance.get()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
@@ -82,6 +92,8 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        instance = WeakReference(this)
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
@@ -168,7 +180,20 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
     }
 
     override fun onDestroy() {
+        instance = WeakReference(null)
         super.onDestroy()
+    }
+
+    fun displayMultiplayerDialog() {
+        val dialog = NetPlayDialog(this)
+        dialog.show()
+    }
+
+    fun addNetPlayMessage(msg: String) {
+        if (msg.isEmpty()) {
+            return
+        }
+        Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT).show()
     }
 
     override fun setTheme(resId: Int) {
