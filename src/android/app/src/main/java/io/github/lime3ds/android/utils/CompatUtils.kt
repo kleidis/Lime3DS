@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-package io.github.mandarine3ds.mandarine.utils
+package io.github.lime3ds_android.utils
 
 import android.app.Activity
 import android.content.Context

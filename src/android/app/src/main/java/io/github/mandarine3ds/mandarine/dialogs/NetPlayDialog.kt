@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-package io.github.mandarine3ds.mandarine.dialogs
+package io.github.lime3ds_android.dialogs
 
 import android.content.Context
 import android.os.Bundle
@@ -11,14 +11,14 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import io.github.mandarine3ds.mandarine.NativeLibrary
-import io.github.mandarine3ds.mandarine.R
-import io.github.mandarine3ds.mandarine.activities.EmulationActivity
-import io.github.mandarine3ds.mandarine.databinding.DialogMultiplayerBinding
-import io.github.mandarine3ds.mandarine.databinding.ItemButtonNetplayBinding
-import io.github.mandarine3ds.mandarine.databinding.ItemTextNetplayBinding
-import io.github.mandarine3ds.mandarine.ui.main.MainActivity
-import io.github.mandarine3ds.mandarine.utils.NetPlayManager
+import io.github.lime3ds_android.NativeLibrary
+import io.github.lime3ds_android.R
+import io.github.lime3ds_android.activities.EmulationActivity
+import io.github.lime3ds_android.databinding.DialogMultiplayerBinding
+import io.github.lime3ds_android.databinding.ItemButtonNetplayBinding
+import io.github.lime3ds_android.databinding.ItemTextNetplayBinding
+import io.github.lime3ds_android.ui.main.MainActivity
+import io.github.lime3ds_android.utils.NetPlayManager
 
 class NetPlayDialog(context: Context) : BaseSheetDialog(context) {
     private lateinit var adapter: NetPlayAdapter
