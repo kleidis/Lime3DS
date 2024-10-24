@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-package io.github.lime3ds_android.lime3dse.utils
+package io.github.lime3ds.android.utils
 
 import android.app.Activity
 import android.content.Context
@@ -11,10 +11,10 @@ import android.text.format.Formatter
 import android.widget.Toast
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import io.github.lime3ds_android.lime3dse.NativeLibrary
-import io.github.lime3ds_android.lime3dse.R
-import io.github.lime3ds_android.lime3dse.databinding.DialogMultiplayerRoomBinding
-import io.github.lime3ds_android.lime3dse.ui.main.MainActivity
+import io.github.lime3ds.android.R
+import io.github.lime3ds.android.NativeLibrary
+import io.github.lime3ds.android.databinding.DialogMultiplayerRoomBinding
+import io.github.lime3ds.android.ui.main.MainActivity
 
 object NetPlayManager {
     fun showCreateRoomDialog(activity: Activity) {

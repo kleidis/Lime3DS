@@ -2,15 +2,15 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-package io.github.lime3ds_android.dialogs
+package io.github.lime3ds.android.dialogs
 
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.LinearLayout
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import io.github.lime3ds_android.databinding.DialogBottomSheetBinding
-import io.github.lime3ds_android.utils.CompatUtils
+import io.github.lime3ds.android.databinding.DialogBottomSheetBinding
+import io.github.lime3ds.android.utils.CompatUtils
 
 open class BaseSheetDialog(context: Context) : BottomSheetDialog(CompatUtils.findActivity(context)) {
     private val contentView: LinearLayout
