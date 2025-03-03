@@ -101,6 +101,14 @@ class DocumentsTree {
     }
 
     @Synchronized
+    fun refreshDirectory(filepath: String): Boolean {
+        val node = resolvePath(filepath) ?: return false
+        if (!node.isDirectory) return false
+        structTree(node)
+        return true
+    }
+
+    @Synchronized
     fun getUri(filepath: String): Uri {
         val node = resolvePath(filepath) ?: return Uri.EMPTY
         return node.uri ?: return Uri.EMPTY
