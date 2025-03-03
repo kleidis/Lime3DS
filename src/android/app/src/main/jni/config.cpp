@@ -22,41 +22,13 @@
 #include "jni/default_ini.h"
 #include "jni/input_manager.h"
 #include "network/network_settings.h"
+#include "jni/id_cache.h"
 
 Config::Config() {
-    // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
-    sdl2_config_loc = FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "config.ini";
-    std::string ini_buffer;
-    FileUtil::ReadFileToString(true, sdl2_config_loc, ini_buffer);
-    if (!ini_buffer.empty()) {
-        sdl2_config = std::make_unique<INIReader>(ini_buffer.c_str(), ini_buffer.size());
-    }
-
     Reload();
 }
 
 Config::~Config() = default;
-
-bool Config::LoadINI(const std::string& default_contents, bool retry) {
-    const std::string& location = this->sdl2_config_loc;
-    if (sdl2_config == nullptr || sdl2_config->ParseError() < 0) {
-        if (retry) {
-            LOG_WARNING(Config, "Failed to load {}. Creating file from defaults...", location);
-            FileUtil::CreateFullPath(location);
-            FileUtil::WriteStringToFile(true, location, default_contents);
-            std::string ini_buffer;
-            FileUtil::ReadFileToString(true, location, ini_buffer);
-            sdl2_config =
-                std::make_unique<INIReader>(ini_buffer.c_str(), ini_buffer.size()); // Reopen file
-
-            return LoadINI(default_contents, false);
-        }
-        LOG_ERROR(Config, "Failed.");
-        return false;
-    }
-    LOG_INFO(Config, "Successfully loaded {}", location);
-    return true;
-}
 
 static const std::array<int, Settings::NativeButton::NumButtons> default_buttons = {
     InputManager::N3DS_BUTTON_A,     InputManager::N3DS_BUTTON_B,
@@ -77,25 +49,22 @@ static const std::array<int, Settings::NativeAnalog::NumAnalogs> default_analogs
 
 template <>
 void Config::ReadSetting(const std::string& group, Settings::Setting<std::string>& setting) {
-    std::string setting_value = sdl2_config->Get(group, setting.GetLabel(), setting.GetDefault());
-    if (setting_value.empty()) {
-        setting_value = setting.GetDefault();
-    }
+    std::string setting_value = GetStringSetting(setting.GetLabel(), setting.GetDefault());
     setting = std::move(setting_value);
 }
 
 template <>
 void Config::ReadSetting(const std::string& group, Settings::Setting<bool>& setting) {
-    setting = sdl2_config->GetBoolean(group, setting.GetLabel(), setting.GetDefault());
+    setting = GetBooleanSetting(setting.GetLabel(), setting.GetDefault());
 }
 
 template <typename Type, bool ranged>
 void Config::ReadSetting(const std::string& group, Settings::Setting<Type, ranged>& setting) {
     if constexpr (std::is_floating_point_v<Type>) {
-        setting = sdl2_config->GetReal(group, setting.GetLabel(), setting.GetDefault());
+        bool isScaled = setting.GetLabel() == "volume"; // TODO: implement proper logic later if added more settings in ScaledFloat format
+        setting = GetFloatSetting(setting.GetLabel(), isScaled, setting.GetDefault());
     } else {
-        setting = static_cast<Type>(sdl2_config->GetInteger(
-            group, setting.GetLabel(), static_cast<long>(setting.GetDefault())));
+        setting = static_cast<Type>(GetIntegerSetting(setting.GetLabel(), static_cast<int>(setting.GetDefault())));
     }
 }
 
@@ -103,30 +72,22 @@ void Config::ReadValues() {
     // Controls
     for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
         std::string default_param = InputManager::GenerateButtonParamPackage(default_buttons[i]);
-        Settings::values.current_input_profile.buttons[i] =
-            sdl2_config->GetString("Controls", Settings::NativeButton::mapping[i], default_param);
+        Settings::values.current_input_profile.buttons[i] = default_param;
         if (Settings::values.current_input_profile.buttons[i].empty())
             Settings::values.current_input_profile.buttons[i] = default_param;
     }
 
     for (int i = 0; i < Settings::NativeAnalog::NumAnalogs; ++i) {
         std::string default_param = InputManager::GenerateAnalogParamPackage(default_analogs[i]);
-        Settings::values.current_input_profile.analogs[i] =
-            sdl2_config->GetString("Controls", Settings::NativeAnalog::mapping[i], default_param);
+        Settings::values.current_input_profile.analogs[i] = default_param;
         if (Settings::values.current_input_profile.analogs[i].empty())
             Settings::values.current_input_profile.analogs[i] = default_param;
     }
 
-    Settings::values.current_input_profile.motion_device = sdl2_config->GetString(
-        "Controls", "motion_device",
-        "engine:motion_emu,update_period:100,sensitivity:0.01,tilt_clamp:90.0");
-    Settings::values.current_input_profile.touch_device =
-        sdl2_config->GetString("Controls", "touch_device", "engine:emu_window");
-    Settings::values.current_input_profile.udp_input_address = sdl2_config->GetString(
-        "Controls", "udp_input_address", InputCommon::CemuhookUDP::DEFAULT_ADDR);
-    Settings::values.current_input_profile.udp_input_port =
-        static_cast<u16>(sdl2_config->GetInteger("Controls", "udp_input_port",
-                                                 InputCommon::CemuhookUDP::DEFAULT_PORT));
+    Settings::values.current_input_profile.motion_device = "engine:motion_emu,update_period:100,sensitivity:0.01,tilt_clamp:90.0";
+    Settings::values.current_input_profile.touch_device = "engine:emu_window";
+    Settings::values.current_input_profile.udp_input_address = InputCommon::CemuhookUDP::DEFAULT_ADDR;
+    Settings::values.current_input_profile.udp_input_port = InputCommon::CemuhookUDP::DEFAULT_PORT;
 
     ReadSetting("Controls", Settings::values.use_artic_base_controller);
 
@@ -135,9 +96,8 @@ void Config::ReadValues() {
     ReadSetting("Core", Settings::values.cpu_clock_percentage);
 
     // Renderer
-    Settings::values.use_gles = sdl2_config->GetBoolean("Renderer", "use_gles", true);
-    Settings::values.shaders_accurate_mul =
-        sdl2_config->GetBoolean("Renderer", "shaders_accurate_mul", false);
+    Settings::values.use_gles = GetBooleanSetting("use_gles", true);
+    Settings::values.shaders_accurate_mul = GetBooleanSetting("shaders_accurate_mul", false);
     ReadSetting("Renderer", Settings::values.graphics_api);
     ReadSetting("Renderer", Settings::values.async_presentation);
     ReadSetting("Renderer", Settings::values.async_shader_compilation);
@@ -151,7 +111,7 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.texture_sampling);
 
     // Work around to map Android setting for enabling the frame limiter to the format Citra expects
-    if (sdl2_config->GetBoolean("Renderer", "use_frame_limit", true)) {
+    if (GetBooleanSetting("use_frame_limit", true)) {
         ReadSetting("Renderer", Settings::values.frame_limit);
     } else {
         Settings::values.frame_limit = 0;
@@ -164,8 +124,7 @@ void Config::ReadValues() {
         default_shader = "dubois (builtin)";
     else if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Interlaced)
         default_shader = "horizontal (builtin)";
-    Settings::values.pp_shader_name =
-        sdl2_config->GetString("Renderer", "pp_shader_name", default_shader);
+    Settings::values.pp_shader_name = default_shader;
     ReadSetting("Renderer", Settings::values.filter_mode);
 
     ReadSetting("Renderer", Settings::values.bg_red);
@@ -177,16 +136,14 @@ void Config::ReadValues() {
     // Layout
     // Somewhat inelegant solution to ensure layout value is between 0 and 5 on read
     // since older config files may have other values
-    int layoutInt = (int)sdl2_config->GetInteger(
-        "Layout", "layout_option", static_cast<int>(Settings::LayoutOption::LargeScreen));
+    int layoutInt = GetIntegerSetting("layout_option");
     if (layoutInt < 0 || layoutInt > 5) {
         layoutInt = static_cast<int>(Settings::LayoutOption::LargeScreen);
     }
     Settings::values.layout_option = static_cast<Settings::LayoutOption>(layoutInt);
-    Settings::values.large_screen_proportion =
-        static_cast<float>(sdl2_config->GetReal("Layout", "large_screen_proportion", 2.25));
+    Settings::values.large_screen_proportion = 2.25;
     Settings::values.small_screen_position = static_cast<Settings::SmallScreenPosition>(
-        sdl2_config->GetInteger("Layout", "small_screen_position",
+            GetIntegerSetting("small_screen_position",
                                 static_cast<int>(Settings::SmallScreenPosition::TopRight)));
     ReadSetting("Layout", Settings::values.custom_top_x);
     ReadSetting("Layout", Settings::values.custom_top_y);
@@ -201,9 +158,7 @@ void Config::ReadValues() {
     ReadSetting("Layout", Settings::values.cardboard_y_shift);
 
     Settings::values.portrait_layout_option =
-        static_cast<Settings::PortraitLayoutOption>(sdl2_config->GetInteger(
-            "Layout", "portrait_layout_option",
-            static_cast<int>(Settings::PortraitLayoutOption::PortraitTopFullWidth)));
+            static_cast<Settings::PortraitLayoutOption>(GetIntegerSetting("portrait_layout_option", static_cast<int>(Settings::PortraitLayoutOption::PortraitTopFullWidth)));
     ReadSetting("Layout", Settings::values.custom_portrait_top_x);
     ReadSetting("Layout", Settings::values.custom_portrait_top_y);
     ReadSetting("Layout", Settings::values.custom_portrait_top_width);
@@ -238,7 +193,7 @@ void Config::ReadValues() {
     ReadSetting("System", Settings::values.region_value);
     ReadSetting("System", Settings::values.init_clock);
     {
-        std::string time = sdl2_config->GetString("System", "init_time", "946681277");
+        std::string time = GetStringSetting("init_time", "946681277");
         try {
             Settings::values.init_time = std::stoll(time);
         } catch (...) {
@@ -253,23 +208,23 @@ void Config::ReadValues() {
     // Camera
     using namespace Service::CAM;
     Settings::values.camera_name[OuterRightCamera] =
-        sdl2_config->GetString("Camera", "camera_outer_right_name", "ndk");
-    Settings::values.camera_config[OuterRightCamera] = sdl2_config->GetString(
-        "Camera", "camera_outer_right_config", std::string{Camera::NDK::BackCameraPlaceholder});
+            GetStringSetting("camera_outer_right_name", "ndk");
+    Settings::values.camera_config[OuterRightCamera] =
+            GetStringSetting("camera_outer_right_config", std::string{Camera::NDK::BackCameraPlaceholder});
     Settings::values.camera_flip[OuterRightCamera] =
-        sdl2_config->GetInteger("Camera", "camera_outer_right_flip", 0);
+            GetIntegerSetting("camera_outer_right_flip", 0);
     Settings::values.camera_name[InnerCamera] =
-        sdl2_config->GetString("Camera", "camera_inner_name", "ndk");
-    Settings::values.camera_config[InnerCamera] = sdl2_config->GetString(
-        "Camera", "camera_inner_config", std::string{Camera::NDK::FrontCameraPlaceholder});
+            GetStringSetting("camera_inner_name", "ndk");
+    Settings::values.camera_config[InnerCamera] =
+            GetStringSetting("camera_inner_config", std::string{Camera::NDK::FrontCameraPlaceholder});
     Settings::values.camera_flip[InnerCamera] =
-        sdl2_config->GetInteger("Camera", "camera_inner_flip", 0);
+            GetIntegerSetting("camera_inner_flip", 0);
     Settings::values.camera_name[OuterLeftCamera] =
-        sdl2_config->GetString("Camera", "camera_outer_left_name", "ndk");
-    Settings::values.camera_config[OuterLeftCamera] = sdl2_config->GetString(
-        "Camera", "camera_outer_left_config", std::string{Camera::NDK::BackCameraPlaceholder});
+            GetStringSetting("camera_outer_left_name", "ndk");
+    Settings::values.camera_config[OuterLeftCamera] =
+            GetStringSetting("camera_outer_left_config", std::string{Camera::NDK::BackCameraPlaceholder});
     Settings::values.camera_flip[OuterLeftCamera] =
-        sdl2_config->GetInteger("Camera", "camera_outer_left_flip", 0);
+            GetIntegerSetting("camera_outer_left_flip", 0);
 
     // Miscellaneous
     ReadSetting("Miscellaneous", Settings::values.log_filter);
@@ -283,26 +238,125 @@ void Config::ReadValues() {
     Common::Log::SetRegexFilter(Settings::values.log_regex_filter.GetValue());
 
     // Debugging
-    Settings::values.record_frame_times =
-        sdl2_config->GetBoolean("Debugging", "record_frame_times", false);
+    Settings::values.record_frame_times = GetBooleanSetting("record_frame_times");
     ReadSetting("Debugging", Settings::values.renderer_debug);
     ReadSetting("Debugging", Settings::values.use_gdbstub);
     ReadSetting("Debugging", Settings::values.gdbstub_port);
     ReadSetting("Debugging", Settings::values.instant_debug_log);
 
     for (const auto& service_module : Service::service_module_map) {
-        bool use_lle = sdl2_config->GetBoolean("Debugging", "LLE\\" + service_module.name, false);
+        bool use_lle = false;
         Settings::values.lle_modules.emplace(service_module.name, use_lle);
     }
 
     // Web Service
-    NetSettings::values.web_api_url =
-        sdl2_config->GetString("WebService", "web_api_url", "https://api.citra-emu.org");
-    NetSettings::values.citra_username = sdl2_config->GetString("WebService", "citra_username", "");
-    NetSettings::values.citra_token = sdl2_config->GetString("WebService", "citra_token", "");
+    NetSettings::values.web_api_url = GetStringSetting("web_api_url", "https://api.citra-emu.org");
+    NetSettings::values.citra_username = GetStringSetting("citra_username", "AZAHAR");
+    NetSettings::values.citra_token = GetStringSetting("citra_token", "");
 }
 
 void Config::Reload() {
-    LoadINI(DefaultINI::sdl2_config_file);
     ReadValues();
+}
+
+bool Config::GetBooleanSetting(const std::string& key, const bool placeholder) {
+    JNIEnv* env = IDCache::GetEnvForThread();
+    jstring jKey = env->NewStringUTF(key.c_str());
+    jclass settingsClass = env->FindClass("org/citra/citra_emu/features/settings/model/NativeSettings");
+    if (!settingsClass) {
+        env->DeleteLocalRef(jKey);
+        return placeholder;
+    }
+    jmethodID methodID = env->GetStaticMethodID(settingsClass, "getBooleanSetting", "(Ljava/lang/String;)Z");
+    if (!methodID) {
+        env->DeleteLocalRef(jKey);
+        return placeholder;
+    }
+    jboolean result = env->CallStaticBooleanMethod(settingsClass, methodID, jKey);
+    env->DeleteLocalRef(jKey);
+
+    if (!result)
+        return placeholder;
+
+    return static_cast<bool>(result);
+}
+
+int Config::GetIntegerSetting(const std::string& key, const int placeholder) {
+    JNIEnv* env = IDCache::GetEnvForThread();
+    jstring jKey = env->NewStringUTF(key.c_str());
+    jclass settingsClass = env->FindClass("org/citra/citra_emu/features/settings/model/NativeSettings");
+
+    if (!settingsClass) {
+        env->DeleteLocalRef(jKey);
+        return placeholder;
+    }
+
+    jmethodID methodID = env->GetStaticMethodID(settingsClass, "getIntSetting", "(Ljava/lang/String;)I");
+
+    if (!methodID) {
+        env->DeleteLocalRef(jKey);
+        return placeholder;
+    }
+
+    jint result = env->CallStaticIntMethod(settingsClass, methodID, jKey);
+    env->DeleteLocalRef(jKey);
+
+    if (!result)
+        return placeholder;
+
+    return static_cast<int>(result);
+}
+
+std::string Config::GetStringSetting(const std::string& key, const std::string& placeholder) {
+    JNIEnv* env = IDCache::GetEnvForThread();
+    jstring jKey = env->NewStringUTF(key.c_str());
+    jclass settingsClass = env->FindClass("org/citra/citra_emu/features/settings/model/NativeSettings");
+    jmethodID methodID = env->GetStaticMethodID(settingsClass, "getStringSetting", "(Ljava/lang/String;)Ljava/lang/String;");
+
+    jstring jResult = (jstring) env->CallStaticObjectMethod(settingsClass, methodID, jKey);
+    env->DeleteLocalRef(jKey);
+
+    if (!jResult) {
+        return placeholder;
+    }
+
+    const char* resultCStr = env->GetStringUTFChars(jResult, nullptr);
+    std::string result(resultCStr);
+    env->ReleaseStringUTFChars(jResult, resultCStr);
+    env->DeleteLocalRef(jResult);
+
+    return result;
+}
+
+float Config::GetFloatSetting(const std::string& key, const bool scaled, const float placeholder) {
+    JNIEnv* env = IDCache::GetEnvForThread();
+    jstring jKey = env->NewStringUTF(key.c_str());
+
+    if (!scaled)
+        return placeholder; // TODO: when adding any normal float setting also implement me
+
+    jclass settingsClass = env->FindClass("org/citra/citra_emu/features/settings/model/NativeSettings");
+    if (!settingsClass) {
+        env->DeleteLocalRef(jKey);
+        return placeholder;
+    }
+    jmethodID methodID;
+    if (scaled) {
+        methodID = env->GetStaticMethodID(settingsClass, "getScaledFloatSetting", "(Ljava/lang/String;)F");
+    } else {
+        methodID = env->GetStaticMethodID(settingsClass, "getFloatSetting", "(Ljava/lang/String;)F");
+    }
+
+    if (!methodID) {
+        env->DeleteLocalRef(jKey);
+        return placeholder;
+    }
+
+    jfloat result = env->CallStaticFloatMethod(settingsClass, methodID, jKey);
+    env->DeleteLocalRef(jKey);
+
+    if (!result)
+        return placeholder;
+
+    return result != 0 ? static_cast<float>(result) : placeholder;
 }

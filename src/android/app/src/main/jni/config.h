@@ -12,10 +12,6 @@ class INIReader;
 
 class Config {
 private:
-    std::unique_ptr<INIReader> sdl2_config;
-    std::string sdl2_config_loc;
-
-    bool LoadINI(const std::string& default_contents = "", bool retry = true);
     void ReadValues();
 
 public:
@@ -33,4 +29,8 @@ private:
      */
     template <typename Type, bool ranged>
     void ReadSetting(const std::string& group, Settings::Setting<Type, ranged>& setting);
+    bool GetBooleanSetting(const std::string& key, const bool placeholder = false);
+    int GetIntegerSetting(const std::string& key, const int placeholder = 0);
+    std::string GetStringSetting(const std::string& key, const std::string& placeholder = "");
+    float GetFloatSetting(const std::string& key, const bool scaled, const float placeholder = 0.0f);
 };

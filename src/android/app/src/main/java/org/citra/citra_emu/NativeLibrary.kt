@@ -111,7 +111,7 @@ object NativeLibrary {
     external fun getInstalledGamePaths(): Array<String?>
 
     // Create the config.ini file.
-    external fun createConfigFile()
+    external fun initialiseConfigFile()
     external fun createLogFile()
     external fun logUserDirectory(directory: String)
 

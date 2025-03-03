@@ -589,7 +589,7 @@ jboolean Java_org_citra_citra_1emu_NativeLibrary_getIsSystemTitle(JNIEnv* env,
     return ((program_id >> 32) & 0xFFFFFFFF) == 0x00040010;
 }
 
-void Java_org_citra_citra_1emu_NativeLibrary_createConfigFile([[maybe_unused]] JNIEnv* env,
+void Java_org_citra_citra_1emu_NativeLibrary_initialiseConfigFile([[maybe_unused]] JNIEnv* env,
                                                               [[maybe_unused]] jobject obj) {
     Config{};
 }
