@@ -45,6 +45,8 @@ import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.ThemeUtil
 import org.citra.citra_emu.viewmodel.EmulationViewModel
+import org.citra.citra_emu.model.Game
+import androidx.core.os.BundleCompat
 
 class EmulationActivity : AppCompatActivity() {
     private val preferences: SharedPreferences
@@ -69,7 +71,19 @@ class EmulationActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         ThemeUtil.setTheme(this)
 
-        settingsViewModel.settings.loadSettings()
+        val game = try {
+            intent.extras?.let { extras ->
+                BundleCompat.getParcelable(extras, "game", Game::class.java)
+            } ?: throw IllegalStateException("Missing game data in intent extras")
+        } catch (e: Exception) {
+            throw IllegalStateException("Failed to retrieve game data: ${e.message}", e)
+        }
+
+        if (game != null && intent.extras?.getBoolean("shouldApplyCustomSettings", false) == true) {
+            settingsViewModel.settings.loadSettings(titleId = String.format("%016X", game.titleId))
+        } else {
+            settingsViewModel.settings.loadSettings()
+        }
 
         super.onCreate(savedInstanceState)
 

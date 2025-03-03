@@ -142,6 +142,9 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             return
         }
 
+        if (args.shouldApplyCustomSettings)
+            Toast.makeText(requireContext(), "Custom settings applied", Toast.LENGTH_SHORT).show()
+
         // So this fragment doesn't restart on configuration changes; i.e. rotation.
         retainInstance = true
         emulationState = EmulationState(game.path)
@@ -324,7 +327,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                     SettingsActivity.launch(
                         requireContext(),
                         SettingsFile.FILE_NAME_CONFIG,
-                        ""
+                        if (args.shouldApplyCustomSettings) String.format("%016X", game.titleId) else ""
                     )
 
                     true

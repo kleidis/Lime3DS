@@ -20,6 +20,7 @@ import android.graphics.Bitmap
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
@@ -93,7 +94,7 @@ class GameAdapter(private val activity: AppCompatActivity, private val inflater:
             )
             .apply()
 
-        val action = HomeNavigationDirections.actionGlobalEmulationActivity(holder.game)
+        val action = HomeNavigationDirections.actionGlobalEmulationActivity(game = holder.game, shouldApplyCustomSettings = false)
         view.findNavController().navigate(action)
     }
 
@@ -217,8 +218,30 @@ class GameAdapter(private val activity: AppCompatActivity, private val inflater:
         GameIconUtils.loadGameIcon(activity, game, bottomSheetView.findViewById(R.id.game_icon))
 
         bottomSheetView.findViewById<MaterialButton>(R.id.about_game_play).setOnClickListener {
-            val action = HomeNavigationDirections.actionGlobalEmulationActivity(holder.game)
-            view.findNavController().navigate(action)
+            val items = arrayOf("Global", "Custom")
+            var checkedItem = 0
+            var selectedItem: String? = items[0]
+
+            MaterialAlertDialogBuilder(context)
+                .setTitle("Launch Config")
+                .setSingleChoiceItems(items, checkedItem) { dialog, which ->
+                    selectedItem = items[which]
+                }
+                .setPositiveButton(android.R.string.ok) { dialog, _ ->
+                    if (selectedItem == "Global") {
+                        val action = HomeNavigationDirections.actionGlobalEmulationActivity(game = game, shouldApplyCustomSettings = false)
+                        view.findNavController().navigate(action)
+                    } else {
+                        val action = HomeNavigationDirections.actionGlobalEmulationActivity(game = game, shouldApplyCustomSettings = true)
+                        view.findNavController().navigate(action)
+                    }
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+        }
+
+        bottomSheetView.findViewById<MaterialButton>(R.id.game_settings).setOnClickListener {
+            SettingsActivity.launch(context, SettingsFile.FILE_NAME_CONFIG, String.format("%016X", game.titleId))
         }
 
         bottomSheetView.findViewById<MaterialButton>(R.id.game_shortcut).setOnClickListener {
