@@ -13,6 +13,7 @@ import org.citra.citra_emu.features.settings.model.ScaledFloatSetting
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.model.view.SliderSetting
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
+import org.citra.citra_emu.utils.ViewUtils.setVisible
 
 class SliderViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAdapter) :
     SettingViewHolder(binding.root, adapter) {
@@ -43,6 +44,12 @@ class SliderViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAda
             binding.textSettingName.alpha = 0.5f
             binding.textSettingDescription.alpha = 0.5f
             binding.textSettingValue.alpha = 0.5f
+        }
+
+        binding.buttonClear.isEnabled = setting.isEditable
+        binding.buttonClear.setVisible(adapter.isClearable(setting))
+        binding.buttonClear.setOnClickListener {
+            adapter.onClearClick(setting)
         }
     }
 

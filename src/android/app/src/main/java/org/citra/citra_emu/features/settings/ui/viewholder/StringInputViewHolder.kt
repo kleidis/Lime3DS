@@ -9,6 +9,7 @@ import org.citra.citra_emu.databinding.ListItemSettingBinding
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.model.view.StringInputSetting
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
+import org.citra.citra_emu.utils.ViewUtils.setVisible
 
 class StringInputViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAdapter) :
     SettingViewHolder(binding.root, adapter) {
@@ -25,6 +26,13 @@ class StringInputViewHolder(val binding: ListItemSettingBinding, adapter: Settin
         }
         binding.textSettingValue.visibility = View.VISIBLE
         binding.textSettingValue.text = setting.setting?.valueAsString
+
+        binding.buttonClear.isEnabled = setting.isEditable
+        binding.buttonClear.setVisible(adapter.isClearable(setting))
+        binding.buttonClear.setOnClickListener {
+            adapter.onClearClick(setting)
+        }
+
     }
 
     override fun onClick(clicked: View) {

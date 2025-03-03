@@ -10,6 +10,7 @@ import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.model.view.SingleChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.StringSingleChoiceSetting
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
+import org.citra.citra_emu.utils.ViewUtils.setVisible
 
 class SingleChoiceViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAdapter) :
     SettingViewHolder(binding.root, adapter) {
@@ -36,7 +37,15 @@ class SingleChoiceViewHolder(val binding: ListItemSettingBinding, adapter: Setti
             binding.textSettingDescription.alpha = 0.5f
             binding.textSettingValue.alpha = 0.5f
         }
+
+        binding.buttonClear.isEnabled = setting.isEditable
+        binding.buttonClear.setVisible(adapter.isClearable(setting))
+        binding.buttonClear.setOnClickListener {
+            adapter.onClearClick(setting)
+        }
     }
+
+
 
     private fun getTextSetting(): String {
         when (val item = setting) {
