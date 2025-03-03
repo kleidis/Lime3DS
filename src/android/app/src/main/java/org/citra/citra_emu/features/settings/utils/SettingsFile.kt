@@ -27,7 +27,7 @@ import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStreamReader
 import java.util.TreeMap
-
+import org.citra.citra_emu.NativeLibrary
 
 /**
  * Contains static methods for interacting with .ini files in which settings are stored.
@@ -121,28 +121,68 @@ object SettingsFile {
     fun saveFile(
         fileName: String,
         sections: TreeMap<String, SettingSection?>,
-        view: SettingsActivityView
+        view: SettingsActivityView? = null
     ) {
         val ini = getSettingsFile(fileName)
         try {
             val context: Context = CitraApplication.appContext
             val inputStream = context.contentResolver.openInputStream(ini.uri)
             val writer = Wini(inputStream)
-            val keySet: Set<String> = sections.keys
-            for (key in keySet) {
-                val section = sections[key]
-                writeSection(writer, section!!)
+            for ((key, section) in sections) {
+                if (section != null && section.settings.isNotEmpty()) { // Ensure section is valid
+                    writeSection(writer, section)
+                }
             }
-            inputStream!!.close()
+            inputStream?.close()
             val outputStream = context.contentResolver.openOutputStream(ini.uri, "wt")
-            writer.store(outputStream)
-            outputStream!!.flush()
-            outputStream.close()
+            if (writer.isEmpty()) {
+                Log.warning("[SettingsFile] Skipping writing empty file: $fileName.ini")
+            } else {
+                writer.store(outputStream)
+                outputStream?.flush()
+            }
+            outputStream?.close()
         } catch (e: Exception) {
             Log.error("[SettingsFile] File not found: $fileName.ini: ${e.message}")
-            view.showToastMessage(
+            view?.showToastMessage(
                 CitraApplication.appContext
                     .getString(R.string.error_saving, fileName, e.message), false
+            )
+        }
+    }
+
+    /**
+     * Saves custom game settings to a given .ini file on disk. If unsuccessful, outputs an error.
+     *
+     * @param gameId   The ID of the game to save its settings.
+     * @param sections The HashMap containing the Settings we want to serialize.
+     * @param view     The current view.
+     */
+    fun saveCustomGameSettings(
+        gameId: String,
+        sections: HashMap<String, SettingSection?>,
+        view: SettingsActivityView? = null
+    ) {
+        val ini = getCustomGameSettingsFile(gameId)
+        try {
+            val context: Context = CitraApplication.appContext
+            val inputStream = context.contentResolver.openInputStream(ini.uri)
+            val writer = Wini(inputStream)
+
+            for ((key, section) in sections) {
+                writeSection(writer, section!!)
+            }
+
+            inputStream?.close()
+            val outputStream = context.contentResolver.openOutputStream(ini.uri, "wt")
+            writer.store(outputStream)
+            outputStream?.flush()
+            outputStream?.close()
+        } catch (e: Exception) {
+            Log.error("[SettingsFile] Error saving custom game settings for: $gameId.ini: ${e.message}")
+            view?.showToastMessage(
+                CitraApplication.appContext
+                    .getString(R.string.error_saving, gameId, e.message), false
             )
         }
     }
@@ -186,13 +226,17 @@ object SettingsFile {
     fun getSettingsFile(fileName: String): DocumentFile {
         val root = DocumentFile.fromTreeUri(CitraApplication.appContext, Uri.parse(userDirectory))
         val configDirectory = root!!.findFile("config")
-        return configDirectory!!.findFile("$fileName.ini")!!
+        val configFile = configDirectory!!.findFile("$fileName.ini") ?: configDirectory.createFile("application/octet-stream", "$fileName.ini")
+        NativeLibrary.initialiseConfigFile()
+        return configFile!!
     }
 
     private fun getCustomGameSettingsFile(gameId: String): DocumentFile {
         val root = DocumentFile.fromTreeUri(CitraApplication.appContext, Uri.parse(userDirectory))
-        val configDirectory = root!!.findFile("GameSettings")
-        return configDirectory!!.findFile("$gameId.ini")!!
+        val configDirectory = root!!.findFile("config")
+        val customDirectory = configDirectory!!.findFile("custom") ?: configDirectory.createDirectory("custom")
+        var configFile = customDirectory!!.findFile("$gameId.ini") ?: customDirectory.createFile("application/octet-stream", "$gameId.ini")
+        return configFile!!
     }
 
     private fun sectionFromLine(line: String, isCustomGame: Boolean): SettingSection {
@@ -265,15 +309,19 @@ object SettingsFile {
      * @param section A section containing settings to be written to the file.
      */
     private fun writeSection(parser: Wini, section: SettingSection) {
-        // Write the section header.
         val header = section.name
+        val iniSection = parser.get(header)
+        if (iniSection != null) {
+            val existingKeys = iniSection.keys.toList() // Convert to list to avoid ConcurrentModificationException
+            for (key in existingKeys) {
+                if (!section.settings.containsKey(key)) {
+                    iniSection.remove(key)
+                }
+            }
+        }
 
-        // Write this section's values.
-        val settings = section.settings
-        val keySet: Set<String> = settings.keys
-        for (key in keySet) {
-            val setting = settings[key]
-            parser.put(header, setting!!.key, setting.valueAsString)
+        for ((key, setting) in section.settings) {
+            parser.put(header, key, setting.valueAsString)
         }
     }
 }

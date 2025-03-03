@@ -7,7 +7,6 @@ package org.citra.citra_emu.features.settings.ui
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.DialogInterface
-import android.graphics.Color
 import android.icu.util.Calendar
 import android.icu.util.TimeZone
 import android.text.Editable
@@ -17,7 +16,6 @@ import android.text.TextWatcher
 import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doOnTextChanged
@@ -66,7 +64,6 @@ import org.citra.citra_emu.features.settings.ui.viewholder.SwitchSettingViewHold
 import org.citra.citra_emu.fragments.MessageDialogFragment
 import org.citra.citra_emu.fragments.MotionBottomSheetDialogFragment
 import org.citra.citra_emu.utils.SystemSaveGame
-import java.lang.IllegalStateException
 import java.lang.NumberFormatException
 import java.text.SimpleDateFormat
 import kotlin.math.roundToInt
@@ -157,6 +154,18 @@ class SettingsAdapter(
         this.settings = settings ?: arrayListOf()
         notifyDataSetChanged()
     }
+
+    fun onClearClick(item: SettingsItem) {
+        fragmentView.activityView?.settings?.clearPerGameSetting(item, fragmentView.activityView!!)
+        (fragmentView as SettingsFragment).view?.postDelayed({
+            fragmentView.loadSettingsList()
+        }, 200)
+    }
+
+    fun isClearable(item: SettingsItem): Boolean {
+        return fragmentView.activityView?.settings?.isSettingCleanable(item.setting!!) ?: false
+    }
+
 
     fun onBooleanClick(item: SwitchSetting, position: Int, checked: Boolean) {
         val setting = item.setChecked(checked)

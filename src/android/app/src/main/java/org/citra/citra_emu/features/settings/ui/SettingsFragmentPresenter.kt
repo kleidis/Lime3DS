@@ -76,9 +76,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
         }
 
         val section = settings.getSection(setting.section!!)!!
-        if (section.getSetting(setting.key!!) == null) {
-            section.putSetting(setting)
-        }
+        section.putSetting(setting)
     }
 
     fun loadSettingsList() {

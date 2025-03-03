@@ -34,12 +34,10 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
     }
 
     private fun loadSettingsUI() {
-        if (!settings.isLoaded) {
-            if (!TextUtils.isEmpty(gameId)) {
-                settings.loadSettings(gameId, activityView)
-            } else {
-                settings.loadSettings(activityView)
-            }
+        if (!TextUtils.isEmpty(gameId)) {
+            settings.loadSettings(gameId, activityView)
+        } else {
+            settings.loadSettings(activityView)
         }
         activityView.showSettingsFragment(menuTag, false, gameId)
         activityView.onSettingsFileLoaded()

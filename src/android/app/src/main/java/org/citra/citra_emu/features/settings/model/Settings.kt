@@ -10,6 +10,7 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.ui.SettingsActivityView
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import java.util.TreeMap
+import org.citra.citra_emu.features.settings.model.view.SettingsItem
 
 class Settings {
     private var gameId: String? = null
@@ -40,33 +41,54 @@ class Settings {
     val isEmpty: Boolean
         get() = sections.isEmpty()
 
-    fun loadSettings(view: SettingsActivityView? = null) {
+    private fun clearMemorySettings() {
+        BooleanSetting.clear()
+        FloatSetting.clear()
+        ScaledFloatSetting.clear()
+        IntSetting.clear()
+        StringSetting.clear()
+    }
+
+    fun loadSettings(view: SettingsActivityView? = null, titleId: String = "") {
+        clearMemorySettings()
         sections = SettingsSectionMap()
         loadCitraSettings(view)
-        if (!TextUtils.isEmpty(gameId)) {
-            loadCustomGameSettings(gameId!!, view)
+        gameId?.takeUnless { TextUtils.isEmpty(it) }?.let { id ->
+            loadCustomGameSettings(id, view)
+        }
+        titleId.takeUnless(TextUtils::isEmpty)?.let { id ->
+            loadCustomGameSettings(id, view)
         }
         isLoaded = true
     }
 
     private fun loadCitraSettings(view: SettingsActivityView?) {
         for ((fileName) in configFileSectionsMap) {
-            sections.putAll(SettingsFile.readFile(fileName, view))
+            val readResult = SettingsFile.readFile(fileName, view)
+            sections.putAll(readResult)
         }
     }
 
-    private fun loadCustomGameSettings(gameId: String, view: SettingsActivityView?) {
+    fun loadCustomGameSettings(gameId: String, view: SettingsActivityView?) {
         // Custom game settings
         mergeSections(SettingsFile.readCustomGameSettings(gameId, view))
     }
 
     private fun mergeSections(updatedSections: HashMap<String, SettingSection?>) {
         for ((key, updatedSection) in updatedSections) {
-            if (sections.containsKey(key)) {
-                val originalSection = sections[key]
-                originalSection!!.mergeSection(updatedSection!!)
-            } else {
-                sections[key] = updatedSection
+            val originalSection = sections[key] ?: SettingSection(key).also { sections[key] = it }
+
+            if (updatedSection != null) {
+                for (setting in updatedSection.settings.values) {
+                    originalSection.putSetting(setting)
+                }
+            }
+            if (updatedSection != null) {
+                for (globalSetting in originalSection.settings.values) {
+                    if (!updatedSection.settings.containsKey(globalSetting.key)) {
+                        originalSection.putSetting(globalSetting, isGlobal = true)
+                    }
+                }
             }
         }
     }
@@ -87,11 +109,53 @@ class Settings {
                 for (section in sectionNames) {
                     iniSections[section] = sections[section]
                 }
-                SettingsFile.saveFile(fileName, iniSections, view)
+                SettingsFile.saveFile(fileName, iniSections, view!!)
             }
         } else {
-            // TODO: Implement per game settings
+            val gameSections = HashMap<String, SettingSection?>()
+            for ((key, section) in sections) {
+                if (section != null) {
+                    val filteredSection = SettingSection(key)
+                    for (setting in section.settings.values) {
+                        if (!section.isGlobalSetting(setting.key!!)) {
+                            filteredSection.putSetting(setting)
+                        }
+                        gameSections[key] = filteredSection
+                    }
+                }
+                SettingsFile.saveCustomGameSettings(gameId!!, gameSections, view!!)
+            }
+            CitraApplication.documentsTree.refreshDirectory("/config")
         }
+    }
+
+    fun clearPerGameSetting(item: SettingsItem, view: SettingsActivityView) {
+        if (TextUtils.isEmpty(gameId)) return
+        sections[item.setting!!.section!!]?.putSetting(item.setting!!, isGlobal = true)
+        saveSettings(view)
+        loadSettings()
+    }
+
+    fun isSettingCleanable(setting: AbstractSetting?): Boolean {
+        if (TextUtils.isEmpty(gameId)) return false
+
+        setting ?: return false
+        setting.key ?: return false
+
+        var foundNonGlobal = false
+
+        for (section in sections.values) {
+            val existingSetting = section?.getSetting(setting!!.key!!)
+            if (existingSetting != null) {
+                if (section.isGlobalSetting(setting!!.key!!)) {
+                    return false
+                } else {
+                    foundNonGlobal = true
+                }
+            }
+        }
+
+        return foundNonGlobal
     }
 
     fun saveSetting(setting: AbstractSetting, filename: String) {
