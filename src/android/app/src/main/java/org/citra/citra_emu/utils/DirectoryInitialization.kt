@@ -46,7 +46,6 @@ object DirectoryInitialization {
                     CitraApplication.documentsTree.setRoot(Uri.parse(userPath))
                     NativeLibrary.createLogFile()
                     NativeLibrary.logUserDirectory(userPath.toString())
-                    NativeLibrary.createConfigFile()
                     GpuDriverHelper.initializeDriverParameters()
                     DirectoryInitializationState.CITRA_DIRECTORIES_INITIALIZED
                 } else {
